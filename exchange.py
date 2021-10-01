@@ -2,6 +2,8 @@ import pandas as pd
 import requests
 import time
 import os
+from tqdm import tqdm
+from math import ceil
 
 
 def current_ms():
@@ -27,14 +29,18 @@ class ExchangeService:
 
     def get_5minuteCandles(self, _symbol, _startTime):
 
-        url = self.service_url + "/api/v3/klines"
+        url = self.service_url + "/api/v3/klines" # corresponding endpoint
+
         endtime = current_ms()
         currtime = _startTime
 
         res = list()
         time_gap = 300000 * 1000
 
+        total_num = ceil((endtime - currtime) / time_gap)
+        progress_bar = tqdm(total=total_num)  # visual and simple progress bar
         while currtime < endtime:
+            progress_bar.update(1)  # everytime, it increases progress by one
             body = {
                 "symbol": _symbol,
                 "interval": "5m",
@@ -141,10 +147,10 @@ class ExchangeService:
         """
         try:
             if os.path.isdir(archive_folder_name):
-                candles:pd.DataFrame = pd.read_pickle(_path)
+                candles: pd.DataFrame = pd.read_pickle(_path)
                 symbol_name = _path.split("/")[-1].split("_")[1]
                 remaining_candles = self.get_5minuteCandles(symbol_name, candles.iloc[-1]["close_time"])
-                candles = pd.concat([candles,remaining_candles])
+                candles = pd.concat([candles, remaining_candles])
                 return candles
 
             else:
@@ -153,3 +159,13 @@ class ExchangeService:
         except:
             print("There is a problem occurred in saving candles")
             return None
+
+
+
+if __name__ == "__main__":
+
+    exchange = ExchangeService()
+    beginning_time = 1500238800000
+
+    exchange.save_candles("BNB_BTCUSDT_5m",
+                          exchange.get_5minuteCandles("BTCUSDT",beginning_time))
