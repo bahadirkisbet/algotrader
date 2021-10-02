@@ -1,72 +1,149 @@
 import pandas as pd
 import requests
-import time
 import os
 from tqdm import tqdm
 from math import ceil
+from utils import current_ms
 
 
-def current_ms():
-    return round(time.time() * 1000)
+class ExchangeHandler:
+    endpoints: dict
+    fields: list
+    exchange_name: str
+    intervals: dict
+    data: dict
+    symbol: str
+    starts_from: int
 
+    def __init__(self, exchange_name, symbol, starting_time):
+        self.endpoints = dict()
 
-class ExchangeService:
-    service_url: str
-    columns: list
+        if exchange_name == 'BNB':
+            self.endpoints['api'] = "https://api.binance.com"
+            self.endpoints['candles'] = "/api/v3/klines"
+            self.endpoints['currencies'] = "/api/v3/exchangeInfo"
+            self.fields = ["open_time",  # 0
+                           "open",  # 1
+                           "high",  # 2
+                           "low",  # 3
+                           "close",  # 4
+                           "volume",  # 5
+                           "close_time",  # 6
+                           "quote_asset_volume",  # 7
+                           "number_of_trades",  # 8
+                           "taker_buy_asset_volume",  # 9
+                           "taker_buy_quote_volume",  # 10
+                           "nothing"]  # 11
+            self.exchange_name = "BNB"
+            self.intervals = {
+                5: "5m",
+                15: "15m",
+                30: "30m",
+                60: "1h",
+                240: "4h",
+                1440: "1d"
+            }
+        else:
+            raise "Exchange Not Found!"
 
-    def __init__(self):
+        self.symbol = symbol
+        self.starts_from = starting_time
+        self.data = dict()
 
-        self.service_url = "https://api.binance.com"
-        self.columns = ["open_time", "open", "high", "low", "close", "volume", "close_time",
-                        "quote_asset_volume", "number_of_trades", "taker_buy_asset_volume", "taker_buy_quote_volume",
-                        "nothing"]
+        if os.path.isfile(f"archive/{exchange_name}_{symbol}_5"):
+            self.read_data([f"archive/{exchange_name}_{symbol}_5"])
+            self.retrieve_missing_candles([5])
+        else:
+            self.data = {
+                5: self.get_candles(symbol, 5, starting_time)  # 5 minutes candle data
+            }
 
     def get_available_currencies(self):
-
-        url = self.service_url + "/api/v3/exchangeInfo"
+        url = self.endpoints["api"] + self.endpoints["currencies"]
         req = requests.get(url)
         return req.content
 
-    def get_5minuteCandles(self, _symbol, _startTime):
+    def get_candles(self, symbol, interval, start_time, end_time=None):
 
-        url = self.service_url + "/api/v3/klines" # corresponding endpoint
+        url = self.endpoints["api"] + self.endpoints["candles"]
 
-        endtime = current_ms()
-        currtime = _startTime
+        current_time = start_time
+        last_time = end_time if end_time != None else current_ms()
 
-        res = list()
+        result = list()
         time_gap = 300000 * 1000
 
-        total_num = ceil((endtime - currtime) / time_gap)
+        total_num = ceil((last_time - current_time) / time_gap)
         progress_bar = tqdm(total=total_num)  # visual and simple progress bar
-        while currtime < endtime:
+
+        while current_time < last_time:
             progress_bar.update(1)  # everytime, it increases progress by one
-            body = {
-                "symbol": _symbol,
-                "interval": "5m",
-                "startTime": currtime,
-                "endTime": currtime + time_gap,  # ms value for 5 minutes
+
+            body = self.prepare_request_body(symbol, interval, current_time, current_time + time_gap)
+            req = requests.get(url, params=body).content
+            current_time += time_gap
+            result.extend(list(map(lambda x: list(map(lambda y: float(y), x)), eval(req))))
+
+        return pd.DataFrame(data=result, columns=self.fields)
+
+    def prepare_request_body(self, symbol, interval, start_time, end_time):
+        if self.exchange_name == "BNB":
+            return {
+                "symbol": symbol,
+                "interval": self.intervals[interval],  # mapping for the corresponding exchange
+                "startTime": int(start_time),
+                "endTime": int(end_time),
                 "limit": "1000"
             }
-            currtime += time_gap
-            res.extend(list(map(lambda x: list(map(lambda y: float(y), x)), eval(
-                requests.get(url, params=body).content))))
-        return res
+        else:
+            raise "Exchange Not Found!"
 
-    def aggregate_candles(self, _symbol, _startTime):
+    def aggregate_candles(self, intervals: list):
 
-        candles = self.get_5minuteCandles(_symbol, _startTime)
+        for interval in intervals:
+            if interval not in self.data:
+                dividend_time_frame = self.get_biggest_smaller_time_frame(interval)
+                group_size = interval // dividend_time_frame
+                self.data[interval] = self.__aggregate_candles_handles(dividend_time_frame, group_size)
 
-        data = dict()
-        data["5m"] = pd.DataFrame(data=candles, columns=self.columns)
-        data["15m"] = self.aggregate_tool(data["5m"], 3)
-        data["30m"] = self.aggregate_tool(data["15m"], 2)
-        data["1h"] = self.aggregate_tool(data["30m"], 2)
-        data["4h"] = self.aggregate_tool(data["1h"], 4)
+    def __aggregate_candles_handles(self, interval, number):
+        if self.exchange_name == "BNB":
+            return self.__aggregate_tool_bnb(self.data[interval], number)
+        else:  # add other exchanges here
+            raise "Error: Exchange not found in aggregation"
 
-        return data
+    def save_data(self, intervals, path="archive/"):
+        for interval in intervals:
+            file_name = f"{self.exchange_name}_{self.symbol}_{interval}"
+            try:
+                self.data[interval].to_pickle(path + file_name)
+            except Exception as err:
+                print("Exception has occurred: ", err)
+        return True
 
-    def aggregate_tool(self, candles: pd.DataFrame, number):
+    def read_data(self, paths):
+        for path in paths:
+            file_name = path.split("/")[-1]
+            exchange_name, symbol, interval = file_name.split("_")
+            try:
+                self.data[int(interval)] = pd.read_pickle(path)
+                self.symbol = symbol
+                self.exchange_name = exchange_name
+            except Exception as err:
+                print("Exception has occurred: ", err)
+
+    def retrieve_missing_candles(self, intervals):
+        for interval in intervals:
+            temp = self.get_candles(self.symbol,
+                                    interval,
+                                    self.data[interval].iloc[-1]["close_time"])
+            self.data[interval] = pd.concat(
+                [self.data[interval], temp],
+                ignore_index=True
+            )
+
+    # REGION: EXCHANGE SPECIFIC FUNCTIONS
+    def __aggregate_tool_bnb(self, candles: pd.DataFrame, number):
 
         res = pd.DataFrame(columns=self.columns)
         for i in range(0, candles.shape[0], number):
@@ -103,69 +180,18 @@ class ExchangeService:
             }, ignore_index=True)
         return res
 
-    def save_candles(self, _path, _candles: pd.DataFrame, archive_folder_name="archive"):
-        """
-        :param archive_folder_name: archive folder name
-        :param _path: this is relative path starting from archive folder
-        :param _candles: the candle data in the form of  Pandas DataFrame
-        :return: True if successful otherwise False
-        """
+    # END REGION: EXCHANGE SPECIFIC FUNCTIONS
 
-        try:
-            if os.path.isdir(archive_folder_name):
-                _candles.to_pickle(_path)
-                return True
-            else:
-                print("Corresponding archive folder is not found.")
-                return False
-        except:
-            print("There is a problem occurred in saving candles")
-            return False
-
-    def read_candles(self, _path, archive_folder_name="archive"):
-        """
-        :param archive_folder_name: archive folder name
-        :param _path: this is relative path starting from archive folder
-        :return: candles if successful otherwise None
-        """
-
-        try:
-            if os.path.isdir(archive_folder_name):
-                return pd.read_pickle(_path)
-            else:
-                print("Corresponding archive folder is not found.")
-                return None
-        except:
-            print("There is a problem occurred in saving candles")
-            return None
-
-    def retrieve_missing_candles(self, _path, archive_folder_name="archive"):
-        """
-        :param archive_folder_name: archive folder name
-        :param _path: this is relative path starting from archive folder
-        :return: candles if successful otherwise None
-        """
-        try:
-            if os.path.isdir(archive_folder_name):
-                candles: pd.DataFrame = pd.read_pickle(_path)
-                symbol_name = _path.split("/")[-1].split("_")[1]
-                remaining_candles = self.get_5minuteCandles(symbol_name, candles.iloc[-1]["close_time"])
-                candles = pd.concat([candles, remaining_candles])
-                return candles
-
-            else:
-                print("Corresponding archive folder is not found.")
-                return None
-        except:
-            print("There is a problem occurred in saving candles")
-            return None
-
+    # REGION: HELPERS
+    def get_biggest_smaller_time_frame(self, time_frame):
+        keys = sorted(self.data.keys())
+        keys.reverse()
+        ind = keys.index(time_frame)
+        return ind + 1 if ind + 1 != len(keys) else ind
+    # END REGION: HELPERS
 
 
 if __name__ == "__main__":
-
-    exchange = ExchangeService()
     beginning_time = 1500238800000
-
-    exchange.save_candles("BNB_BTCUSDT_5m",
-                          exchange.get_5minuteCandles("BTCUSDT",beginning_time))
+    exchange = ExchangeHandler("BNB", "BTCUSDT", beginning_time)
+    exchange.save_data([5])
