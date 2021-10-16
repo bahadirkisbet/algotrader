@@ -1,21 +1,30 @@
-import ta
+from typing import Any
+from exchange import ExchangeHandler
 import pandas as pd
 
-VALID_INDICATORS = {
-    "MA"
-}
 
 class Strategy:
     trade_open: bool
+    candles: pd.DataFrame
+    strategy: Any
+    values: dict
+    exchange: ExchangeHandler
+    symbol: str
 
-    def __init__(self, _candles, _indicator_list):
+    def __init__(self, _indicator_list, _exchange_code, _symbol, _date):
         self.trade_open = False
+        self.exchange = ExchangeHandler(_exchange_code, _symbol, _date)
 
-    def buy(self):
-        pass
-    
-    def sell(self):
+    def buy(self):  # Virtual
         pass
 
-    def update(self):
+    def sell(self):  # Virtual
+        pass
+
+    def update(self):  # Virtual
+
+        self.candles.a
+        # Calculate the indicators
+
+        # Determine buy or sell
         pass

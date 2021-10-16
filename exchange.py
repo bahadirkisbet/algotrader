@@ -68,7 +68,7 @@ class ExchangeHandler:
         url = self.endpoints["api"] + self.endpoints["candles"]
 
         current_time = start_time
-        last_time = end_time if end_time != None else current_ms()
+        last_time = end_time if end_time is not None else current_ms()
 
         result = list()
         time_gap = 300000 * 1000
@@ -179,7 +179,6 @@ class ExchangeHandler:
                 "nothing": temp[11]
             }, ignore_index=True)
         return res
-
     # END REGION: EXCHANGE SPECIFIC FUNCTIONS
 
     # REGION: HELPERS
