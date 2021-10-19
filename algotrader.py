@@ -1,6 +1,5 @@
 from exchange import ExchangeHandler
-import subprocess
-import socket
+
 
 class AlgoTrader:
     exchange: ExchangeHandler
@@ -8,3 +7,9 @@ class AlgoTrader:
 
     def __init__(self, sub):
         pass
+
+    # PIPES
+    def PIPE_exchange(self, data: dict):
+
+        if data["type"] == "history":
+            self.symbol = data["msg"]

@@ -16,7 +16,7 @@ class IndicatorHandler:
         res = list()
         for i in _indicator_list:
             temp = i.split("_")
-            res.append([temp[0]] + list(map(lambda x: eval(x), temp[1:])))
+            res.append([temp[0]] + list(map(eval, temp[1:])))
             self.indicator_values[i] = list()
 
         return res

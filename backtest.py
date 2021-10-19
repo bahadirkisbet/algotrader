@@ -21,3 +21,4 @@ class BackTest:
     def start(self):
 
         for _ in range(self.candles.shape[0]): # every candles goes in to the back test world one by one
+            pass

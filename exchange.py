@@ -1,9 +1,11 @@
-import pandas as pd
 import requests
 import os
 from tqdm import tqdm
 from math import ceil
 from utils import current_ms
+from typing import Any
+import json
+import websocket
 
 
 class ExchangeHandler:
@@ -14,14 +16,16 @@ class ExchangeHandler:
     data: dict
     symbol: str
     starts_from: int
+    pipe: Any
 
-    def __init__(self, exchange_name, symbol, starting_time):
+    def __init__(self, exchange_name, symbol, starting_time, pipe):
         self.endpoints = dict()
-
+        self.pipe = pipe
         if exchange_name == 'BNB':
             self.endpoints['api'] = "https://api.binance.com"
             self.endpoints['candles'] = "/api/v3/klines"
             self.endpoints['currencies'] = "/api/v3/exchangeInfo"
+            self.endpoints["websocket"] = "wss://stream.binance.com:9443"
             self.fields = ["open_time",  # 0
                            "open",  # 1
                            "high",  # 2
@@ -50,8 +54,8 @@ class ExchangeHandler:
         self.starts_from = starting_time
         self.data = dict()
 
-        if os.path.isfile(f"archive/{exchange_name}_{symbol}_5"):
-            self.read_data([f"archive/{exchange_name}_{symbol}_5"])
+        if os.path.isfile(f"archive/{exchange_name}_{symbol}_5.json"):
+            self.read_data([f"archive/{exchange_name}_{symbol}_5.json"])
             self.retrieve_missing_candles([5])
         else:
             self.data = {
@@ -82,9 +86,9 @@ class ExchangeHandler:
             body = self.prepare_request_body(symbol, interval, current_time, current_time + time_gap)
             req = requests.get(url, params=body).content
             current_time += time_gap
-            result.extend(list(map(lambda x: list(map(lambda y: float(y), x)), eval(req))))
+            result.extend(list(map(lambda x: list(map(float, x)), eval(req))))
 
-        return pd.DataFrame(data=result, columns=self.fields)
+        return result
 
     def prepare_request_body(self, symbol, interval, start_time, end_time):
         if self.exchange_name == "BNB":
@@ -99,7 +103,6 @@ class ExchangeHandler:
             raise "Exchange Not Found!"
 
     def aggregate_candles(self, intervals: list):
-
         for interval in intervals:
             if interval not in self.data:
                 dividend_time_frame = self.get_biggest_smaller_time_frame(interval)
@@ -114,38 +117,43 @@ class ExchangeHandler:
 
     def save_data(self, intervals, path="archive/"):
         for interval in intervals:
-            file_name = f"{self.exchange_name}_{self.symbol}_{interval}"
+            file_name = f"{self.exchange_name}_{self.symbol}_{interval}.json"
             try:
-                self.data[interval].to_pickle(path + file_name)
+                with open(path + file_name, 'w') as out:
+                    json.dumps(self.data[interval])
             except Exception as err:
-                print("Exception has occurred: ", err)
-        return True
+                print("Exception has occurred in 'save_data': ", err)
 
     def read_data(self, paths):
         for path in paths:
             file_name = path.split("/")[-1]
             exchange_name, symbol, interval = file_name.split("_")
             try:
-                self.data[int(interval)] = pd.read_pickle(path)
+                with open(path, 'r') as in_file:
+                    self.data[int(interval)] = json.loads(in_file)
                 self.symbol = symbol
                 self.exchange_name = exchange_name
             except Exception as err:
-                print("Exception has occurred: ", err)
+                print("Exception has occurred in 'read_data': ", err)
 
     def retrieve_missing_candles(self, intervals):
         for interval in intervals:
-            temp = self.get_candles(self.symbol,
-                                    interval,
-                                    self.data[interval].iloc[-1]["close_time"])
-            self.data[interval] = pd.concat(
-                [self.data[interval], temp],
-                ignore_index=True
-            )
+
+            if len(self.data) and interval in self.data: # if the key is in the dict
+                self.data[interval].update(
+                    self.get_candles(self.symbol,
+                                     interval,
+                                     self.data[interval][-1]["close_time"])
+                )
+            else: # otherwise, add the key
+                self.data[interval] = self.get_candles(self.symbol,
+                                                       interval,
+                                                       self.starts_from)
 
     # REGION: EXCHANGE SPECIFIC FUNCTIONS
-    def __aggregate_tool_bnb(self, candles: pd.DataFrame, number):
+    def __aggregate_tool_bnb(self, candles: dict, number):
 
-        res = pd.DataFrame(columns=self.columns)
+        res = dict()
         for i in range(0, candles.shape[0], number):
             temp = [0] * 12
             temp[0] = candles.iloc[i]["open_time"]
@@ -164,25 +172,17 @@ class ExchangeHandler:
                 temp[8] += candles.iloc[i + j]["number_of_trades"]
                 temp[9] += candles.iloc[i + j]["taker_buy_asset_volume"]
                 temp[10] += candles.iloc[i + j]["taker_buy_quote_volume"]
-            res = res.append({
-                "open_time": temp[0],
-                "open": temp[1],
-                "high": temp[2],
-                "low": temp[3],
-                "close": temp[4],
-                "volume": temp[5],
-                "close_time": temp[6],
-                "quote_asset_volume": temp[7],
-                "number_of_trades": temp[8],
-                "taker_buy_asset_volume": temp[9],
-                "taker_buy_quote_volume": temp[10],
-                "nothing": temp[11]
-            }, ignore_index=True)
+            res.update(temp)
         return res
     # END REGION: EXCHANGE SPECIFIC FUNCTIONS
 
     # REGION: HELPERS
     def get_biggest_smaller_time_frame(self, time_frame):
+        """
+        :param time_frame: given time interval
+        :return: it returns the biggest time frame that is smaller than the parameter "time_frame"
+        """
+
         keys = sorted(self.data.keys())
         keys.reverse()
         ind = keys.index(time_frame)
@@ -192,5 +192,5 @@ class ExchangeHandler:
 
 if __name__ == "__main__":
     beginning_time = 1500238800000
-    exchange = ExchangeHandler("BNB", "BTCUSDT", beginning_time)
+    exchange = ExchangeHandler("BNB", "BTCUSDT", beginning_time, "a")
     exchange.save_data([5])

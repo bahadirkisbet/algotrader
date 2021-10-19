@@ -1,5 +1,4 @@
 from typing import Any
-from exchange import ExchangeHandler
 import pandas as pd
 
 
@@ -8,12 +7,10 @@ class Strategy:
     candles: pd.DataFrame
     strategy: Any
     values: dict
-    exchange: ExchangeHandler
-    symbol: str
 
-    def __init__(self, _indicator_list, _exchange_code, _symbol, _date):
+    def __init__(self, _indicator_list, _candles):
+        self.candles = _candles
         self.trade_open = False
-        self.exchange = ExchangeHandler(_exchange_code, _symbol, _date)
 
     def buy(self):  # Virtual
         pass
