@@ -1,3 +1,5 @@
+import sys
+
 import requests
 import os
 from tqdm import tqdm
@@ -6,7 +8,117 @@ from utils import current_ms
 from typing import Any
 import json
 import websocket
+from configs import CONFIG
+import threading
 
+class Exchange:
+    cfg: dict
+    data: dict
+    pipe: Any
+    symbol: str
+    sckt: websocket.WebSocket
+    thread: threading.Thread
+
+    def __init__(self, _symbol, _cfg, _pipe, _file_path=""):
+        '''
+        :param _cfg: config file for an exchange
+        :param _pipe: a pipeline for the communication between other classes
+        :param _file_path: if there is an archive in the file, read it
+        '''
+        self.symbol = _symbol
+        self.cfg = _cfg
+        self.pipe = _pipe
+        self.sckt = websocket.WebSocket()
+        if _file_path != "":  # there is a path given
+            pass
+            # self.read_data(_file_path)
+
+    def get_available_coins(self):
+        url = self.cfg["endpoints"]["api"] + self.cfg["endpoints"]["coins"]
+        req = requests.get(url)
+        return req.content
+
+    def get_candles(self, symbol, interval, start_time, end_time=None):
+
+        url = self.cfg["endpoints"]["api"] + self.cfg["endpoints"]["candles"]
+
+        current_time = start_time
+        last_time = end_time if end_time is not None else current_ms()
+
+        result = list()
+        time_gap = 300000 * 1000
+
+        total_num = ceil((last_time - current_time) / time_gap)
+        progress_bar = tqdm(total=total_num)  # visual and simple progress bar
+
+        while current_time < last_time:
+            progress_bar.update(1)  # everytime, it increases progress by one
+
+            # The request body prepared by the user. The next line can be changed by the parameters
+            body = eval(self.cfg["request_body"]["candle"] % (symbol, interval, current_time, current_time + time_gap))
+
+            req = requests.get(url, params=body).content
+            current_time += time_gap
+            result.extend(list(map(lambda x: list(map(float, x)), eval(req))))
+
+        return result
+
+    def prepare_request_body(self, symbol, interval, start_time, end_time):
+        if self.cfg["exchange_code"] == "BNB":
+            return {
+                "symbol": symbol,
+                "interval": self.intervals[interval],  # mapping for the corresponding exchange
+                "startTime": int(start_time),
+                "endTime": int(end_time),
+                "limit": "1000"
+            }
+        else:
+            raise "Exchange Not Found!"
+
+    def save_data(self, key, path):
+        try:
+            file_name = f"{self.cfg['exchange_code']}_{self.symbol}_{key}.json"
+            with open(path + file_name, 'w') as out:
+                json.dumps(self.data[key], out)
+
+        except Exception as e:
+            print(e)
+
+    def read_data(self, key, path):
+        try:
+            with open(path, 'r') as in_file:
+                self.data[key] = json.load(in_file)
+
+        except Exception as e:
+            print(e)
+
+    def connect_to_websocket(self, interval):
+        self.thread = threading.Thread(target=self.__socket_connection(interval))
+        self.thread.start()
+
+    def __socket_connection(self, interval):
+        url = self.cfg["endpoints"]["websocket"]
+        url += self.cfg["endpoints"]["websocket_extra"] % (self.symbol, interval)
+        self.sckt.connect(url)
+        if self.sckt.connected:
+            print("Connection is successful")
+        else:
+            print("There is a problem in connection")
+
+        # sub_ms = json.dumps({
+        #     "method": "SUBSCRIBE",
+        #     "params": ['btcusdt@kline_5m'],
+        #     "id": 1
+        # })
+        sub_msg = self.cfg["request_body"]["subscribe"] % ('btcusdt', 'kline', interval)
+        sub_msg = json.dumps(eval(sub_msg)) # Somehow, it gives an error if you convert it into dict and then string.
+
+        self.sckt.send(sub_msg)
+
+        while True:
+            msg = json.loads(self.sckt.recv())
+            print(msg)
+        sys.exit()
 
 class ExchangeHandler:
     endpoints: dict
@@ -18,7 +130,7 @@ class ExchangeHandler:
     starts_from: int
     pipe: Any
 
-    def __init__(self, exchange_name, symbol, starting_time, pipe):
+    def __init__(self, exchange_name, symbol, starting_time, pipe, read_from_file=True):
         self.endpoints = dict()
         self.pipe = pipe
         if exchange_name == 'BNB':
@@ -54,9 +166,12 @@ class ExchangeHandler:
         self.starts_from = starting_time
         self.data = dict()
 
-        if os.path.isfile(f"archive/{exchange_name}_{symbol}_5.json"):
-            self.read_data([f"archive/{exchange_name}_{symbol}_5.json"])
-            self.retrieve_missing_candles([5])
+        if read_from_file:
+            if os.path.isfile(f"archive/{exchange_name}_{symbol}_5.json"):
+                self.read_data([f"archive/{exchange_name}_{symbol}_5.json"])
+                self.retrieve_missing_candles([5])
+            else:
+                print("File Not Found !!")
         else:
             self.data = {
                 5: self.get_candles(symbol, 5, starting_time)  # 5 minutes candle data
@@ -139,13 +254,13 @@ class ExchangeHandler:
     def retrieve_missing_candles(self, intervals):
         for interval in intervals:
 
-            if len(self.data) and interval in self.data: # if the key is in the dict
+            if len(self.data) and interval in self.data:  # if the key is in the dict
                 self.data[interval].update(
                     self.get_candles(self.symbol,
                                      interval,
                                      self.data[interval][-1]["close_time"])
                 )
-            else: # otherwise, add the key
+            else:  # otherwise, add the key
                 self.data[interval] = self.get_candles(self.symbol,
                                                        interval,
                                                        self.starts_from)
@@ -154,15 +269,15 @@ class ExchangeHandler:
     def __aggregate_tool_bnb(self, candles: dict, number):
 
         res = dict()
-        for i in range(0, candles.shape[0], number):
+        for i in range(0, len(candles), number):
             temp = [0] * 12
-            temp[0] = candles.iloc[i]["open_time"]
-            temp[1] = candles.iloc[i]["open"]
+            temp[0] = candles[i]["open_time"]
+            temp[1] = candles[i]["open"]
             temp[2] = 0  # high
             temp[3] = 99999999  # low
-            temp[4] = candles.iloc[min(i + number - 1, candles.shape[0] - 1)]["close"]
+            temp[4] = candles[min(i + number - 1, len(candles) - 1)]["close"]
             temp[5] = 0  # volume
-            temp[6] = candles.iloc[min(i + number - 1, candles.shape[0] - 1)]["close_time"]
+            temp[6] = candles[min(i + number - 1, len(candles) - 1)]["close_time"]
 
             for j in range(min(number, candles.shape[0] - i)):
                 temp[2] = max(candles.iloc[i + j]["high"], temp[2])
@@ -174,6 +289,7 @@ class ExchangeHandler:
                 temp[10] += candles.iloc[i + j]["taker_buy_quote_volume"]
             res.update(temp)
         return res
+
     # END REGION: EXCHANGE SPECIFIC FUNCTIONS
 
     # REGION: HELPERS
@@ -191,6 +307,5 @@ class ExchangeHandler:
 
 
 if __name__ == "__main__":
-    beginning_time = 1500238800000
-    exchange = ExchangeHandler("BNB", "BTCUSDT", beginning_time, "a")
-    exchange.save_data([5])
+    exchange = Exchange("BTCUSDT", CONFIG["BNB_spot"], "")
+    exchange.connect_to_websocket("5m")
