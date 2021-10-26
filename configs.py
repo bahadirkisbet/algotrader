@@ -21,6 +21,15 @@ CONFIG = { # new exchange configs will be added here
                     "taker_buy_asset_volume",  # 9
                     "taker_buy_quote_volume",  # 10
                     "nothing"],  # 11
+        "map": { # mapping for data fields of the request coming from the exchange
+            "o": 1,
+            "h": 2,
+            "l": 3,
+            "c": 4,
+            "v": 5,
+            "o_ts": 0,
+            "c_ts": 6
+        },
         "exchange_code": "BNB",
         "intervals": {
                 5: "5m",
