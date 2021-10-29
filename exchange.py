@@ -1,16 +1,13 @@
 import sys
-import time
-
 import requests
-import os
+import json
+import websocket
+import threading
 from tqdm import tqdm
 from math import ceil
 from utils import current_ms
 from typing import Any
-import json
-import websocket
 from configs import CONFIG
-import threading
 
 
 class Exchange:
@@ -72,7 +69,7 @@ class Exchange:
             result.extend(list(map(lambda x: list(map(float, x)), eval(req))))
         return result
 
-    def prepare_request_body(self, symbol, interval, start_time, end_time): # not used anymore
+    def prepare_request_body(self, symbol, interval, start_time, end_time):  # not used anymore
         if self.cfg["exchange_code"] == "BNB":
             return {
                 "symbol": symbol,
@@ -102,7 +99,7 @@ class Exchange:
             print(e)
 
     def retrieve_missing_candles(self, key, path):
-        self.read_data(key, path) # read the data
+        self.read_data(key, path)  # read the data
         last_ts = self.data[key][-1][self.cfg["map"]["c_ts"]]
         self.data[key].extend(self.get_candles(key, last_ts))
 
@@ -125,14 +122,14 @@ class Exchange:
         else:
             print("There is a problem in connection")
 
-
-        sub_msg = self.cfg["request_body"]["subscribe"] % (symbol, 'kline', interval)
+        sub_msg = self.cfg["request_body"]["subscribe"] % (symbol, 'kline', self.cfg["intervals"][interval])
         sub_msg = json.dumps(eval(sub_msg))  # Somehow, it gives an error if you convert it into dict and then string.
 
         self.sckt.send(sub_msg)
         while not self.__close_connection__.is_set():
+
             msg = json.loads(self.sckt.recv())
-            # print(msg)
+            print(msg)
             if "e" in msg:
                 if msg["e"] == "kline" and "k" in msg and msg["k"]["x"]:
                     self.pipe({
@@ -144,12 +141,15 @@ class Exchange:
 
 
 def f(x):
-    print(current_ms())
+    print(x)
 
 
 if __name__ == "__main__":
     exchange = Exchange("BTCUSDT", CONFIG["BNB_spot"], f)
+    exchange.connect_to_websocket(5)
+    exchange.retrieve_missing_candles(5, "archive/BNB_BTCUSDT_5.json")
+    print(exchange.data[5][-1])
     # exchange.get_candles(5)
     # exchange.save_data(5, "archive/")
-    exchange.retrieve_missing_candles(5, "archive/BNB_BTCUSDT_5.json")
-    print(len(exchange.data[5]))
+    # exchange.retrieve_missing_candles(5, "archive/BNB_BTCUSDT_5.json")
+    # print(len(exchange.data[5]))
