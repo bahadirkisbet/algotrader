@@ -20,11 +20,11 @@ class Exchange:
     __close_connection__: threading.Event
 
     def __init__(self, _symbol, _cfg, _pipe, _file_path=""):
-        '''
+        """
         :param _cfg: config file for an exchange
         :param _pipe: a pipeline for the communication between other classes
         :param _file_path: if there is an archive in the file, read it
-        '''
+        """
         self.symbol = _symbol
         self.cfg = _cfg
         self.pipe = _pipe
@@ -68,18 +68,6 @@ class Exchange:
             current_time += time_gap
             result.extend(list(map(lambda x: list(map(float, x)), eval(req))))
         return result
-
-    def prepare_request_body(self, symbol, interval, start_time, end_time):  # not used anymore
-        if self.cfg["exchange_code"] == "BNB":
-            return {
-                "symbol": symbol,
-                "interval": self.intervals[interval],  # mapping for the corresponding exchange
-                "startTime": int(start_time),
-                "endTime": int(end_time),
-                "limit": "1000"
-            }
-        else:
-            raise "Exchange Not Found!"
 
     def save_data(self, key, path):
         try:
