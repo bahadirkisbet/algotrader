@@ -1,4 +1,6 @@
 import sys
+import time
+
 import requests
 import json
 import websocket
@@ -8,6 +10,7 @@ from math import ceil
 from utils import current_ms
 from typing import Any
 from configs import CONFIG
+from queue import Queue
 
 
 class Exchange:
@@ -50,12 +53,12 @@ class Exchange:
         current_time = start_time
         last_time = end_time if end_time is not None else current_ms()
 
-        result = list()
-        time_gap = 300000 * 1000
+        conccurrent_queue = Queue()
+        time_gap = 300000
 
         total_num = ceil((last_time - current_time) / time_gap)
         progress_bar = tqdm(total=total_num)  # visual and simple progress bar
-
+        t = None
         while current_time < last_time:
             progress_bar.update(1)  # everytime, it increases progress by one
 
@@ -63,11 +66,22 @@ class Exchange:
             ft = current_time + time_gap
             # The request body prepared by the user. The next line can be changed by the parameters
             body = eval(self.cfg["request_body"]["candle"] % (self.symbol, self.cfg["intervals"][interval], st, ft))
+            t = threading.Thread(target=self.make_request, args=(url, body, conccurrent_queue))
+            t.start()
 
-            req = requests.get(url, params=body).content
+            time.sleep(self.cfg["throttle_ms"] / 1000)
+
+            # req = requests.get(url, params=body).content
             current_time += time_gap
-            result.extend(list(map(lambda x: list(map(float, x)), eval(req))))
-        return result
+        t.join(2)
+        result = list(filter(lambda x: x != [], conccurrent_queue.queue))
+        result.sort(key=lambda x: x[0])
+        return [ i[0] for i in result ]
+
+    def make_request(self, url, body, queue: Queue):
+        req = requests.get(url, params=body).content
+        queue.put(list(map(lambda x: list(map(float, x)), eval(req))))
+
 
     def save_data(self, key, path):
         try:
@@ -134,9 +148,25 @@ def f(x):
 
 if __name__ == "__main__":
     exchange = Exchange("BTCUSDT", CONFIG["BNB_spot"], f)
-    exchange.connect_to_websocket(5)
-    exchange.retrieve_missing_candles(5, "archive/BNB_BTCUSDT_5.json")
-    print(exchange.data[5][-1])
+    a_month_ago = 1 * 24 * 60 * 60 * 1000
+    exchange.data[5] = exchange.get_candles(5, start_time=current_ms() - a_month_ago)
+    exchange.save_data(5, ".")
+    # exchange.connect_to_websocket(5)
+    # exchange.retrieve_missing_candles(5, "archive/BNB_BTCUSDT_5.json")
+    exchange.read_data(5, ".BNB_BTCUSDT_5.json")
+    gap = 300000
+    wrong_time = 0
+    s = set()
+    # exchange.data[5] = list(map(lambda x: x[0], exchange.data[5]))
+
+    for i in range(len(exchange.data[5]) - 1):
+        if exchange.data[5][i + 1][0] - exchange.data[5][i][0] != gap:
+            wrong_time += 1
+        s.add(exchange.data[5][i][0])
+    s.add(exchange.data[5][-1][0])
+    print(wrong_time)
+    print(len(s), len(exchange.data[5]))
+
     # exchange.get_candles(5)
     # exchange.save_data(5, "archive/")
     # exchange.retrieve_missing_candles(5, "archive/BNB_BTCUSDT_5.json")

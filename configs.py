@@ -49,6 +49,7 @@ CONFIG = { # new exchange configs will be added here
                  }""",
             "subscribe": "{ 'method': 'SUBSCRIBE','params': [ '%s@%s_%s' ],'id': 1}"
 
-        }
+        },
+        "throttle_ms": 50
     }
 }

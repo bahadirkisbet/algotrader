@@ -84,17 +84,17 @@ class IndicatorHandler:
 
 
 if __name__ == "__main__":
-    indicator_list = ["BB_20_2"]
+    from exchange import Exchange
+
+    exchange = Exchange("BTCUSDT", CONFIG["BNB_spot"], lambda x: print(x))
+    indicator_list = ["BB_20_2", "EMA_20", "SMA_20"]
     test_dict = {
-        5: [[5], [6], [1], [8], [1],
-            [4], [7], [3], [10], [12],
-            [1], [5], [2], [3], [4],
-            [6], [8], [10], [11], [14]]
+        5: exchange.get_candles(5)
     }
     values = dict()
     ih = IndicatorHandler(test_dict[5], indicator_list, values)
     print(ih.indicator_instance_list)
 
-    for i in range(20):
-        ih.update_indicator_values(0, i)
+    for i in range(len(test_dict[5])):
+        ih.update_indicator_values(4, i)
     print(ih.candles)
