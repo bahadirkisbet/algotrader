@@ -1,6 +1,4 @@
-
-
-CONFIG = { # new exchange configs will be added here
+CONFIG = {  # new exchange configs will be added here
     "BNB_spot": {
         "endpoints": {
             "api": "https://api.binance.com",
@@ -9,19 +7,19 @@ CONFIG = { # new exchange configs will be added here
             "websocket": "wss://stream.binance.com:9443/ws/",
             "websocket_extra": "%s@kline_%s"
         },
-        "fields": [ "open_time",  # 0
-                    "open",  # 1
-                    "high",  # 2
-                    "low",  # 3
-                    "close",  # 4
-                    "volume",  # 5
-                    "close_time",  # 6
-                    "quote_asset_volume",  # 7
-                    "number_of_trades",  # 8
-                    "taker_buy_asset_volume",  # 9
-                    "taker_buy_quote_volume",  # 10
-                    "nothing"],  # 11
-        "map": { # mapping for data fields of the request coming from the exchange
+        "fields": ["open_time",  # 0
+                   "open",  # 1
+                   "high",  # 2
+                   "low",  # 3
+                   "close",  # 4
+                   "volume",  # 5
+                   "close_time",  # 6
+                   "quote_asset_volume",  # 7
+                   "number_of_trades",  # 8
+                   "taker_buy_asset_volume",  # 9
+                   "taker_buy_quote_volume",  # 10
+                   "nothing"],  # 11
+        "map": {  # mapping for data fields of the request coming from the exchange
             "o": 1,
             "h": 2,
             "l": 3,
@@ -32,12 +30,12 @@ CONFIG = { # new exchange configs will be added here
         },
         "exchange_code": "BNB",
         "intervals": {
-                5: "5m",
-                15: "15m",
-                30: "30m",
-                60: "1h",
-                240: "4h",
-                1440: "1d"
+            5: "5m",
+            15: "15m",
+            30: "30m",
+            60: "1h",
+            240: "4h",
+            1440: "1d"
         },
         "first_ts": 1500238800000,
         "request_body": {
