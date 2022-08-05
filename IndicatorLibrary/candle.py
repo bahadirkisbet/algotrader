@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from enum import Enum
 import gzip
+from typing import List
 
 class CandleKey(Enum):
     ts = 0  # timestamp
@@ -31,14 +32,30 @@ class Candle:
         return indicator_list
 
     # public methods
-    def add_data(self, df: pd.DataFrame):
-        pass
+    def add_data(self, data: list) -> None:
+        assert type(data) is list, "data must be a list"
 
-    def add_ival(self, df: pd.DataFrame):
-        pass
+        if type(data[0]) is not list:
+            data = [data]
 
-    def get_ival(self, l: [ValidIndicators]):
-        pass
+        for d in data:
+            self.__data__.append(d)
+
+    def get_ival(self, l: List[ValidIndicators], offset=0) -> dict:
+        """
+        Get the indicator values of the last candle or the last offset candles
+        :param l:
+        :param offset:
+        :return:
+        """
+        start_index = len(self.__data__) - offset - 1
+        if start_index < 0:
+            start_index = 0
+        end_index = len(self.__data__) - 1
+        result = dict()
+        for indicator in l:
+            result[indicator.value] = self.__indicator_values__[indicator.value][start_index:end_index]
+        return result
 
     def get_symbol(self):
         return self.__symbol__
@@ -80,7 +97,7 @@ class Candle:
     # private methods
 
     def __init__(self, symbol=None, indicator_list=None):
-        self.__data__ = dict()
+        self.__data__ = list()
         self.__symbol__ = symbol
         self.__indicator_values__ = dict()  # the corresponding values of the indicators
         self.__indicator_list__ = self.__check_is_valid_indicators__(indicator_list)  # list of indicator instances
