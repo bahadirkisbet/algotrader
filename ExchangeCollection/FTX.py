@@ -26,6 +26,7 @@ class FTX(ExchangeBase):
         }
         self.limit = 1000
         self.queue: Queue = Queue()
+        self.throttle_seconds = 0.2
 
     def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: Interval) -> list:
         interval_in_seconds = self.interval_to_granularity(interval)
@@ -48,14 +49,18 @@ class FTX(ExchangeBase):
             task = Thread(target=self.__get_candle__, args=(param, self.queue))
             task.start()
             tasks.append(task)
-            sleep(0.1)
+            sleep(self.throttle_seconds)
 
         for task in tasks:
             task.join()
 
+        result = list()
         while self.queue.empty() is False:
             data = self.queue.get()
-            print(data)
+            if data.get("success", False):
+                result.extend(data.get("result", []))
+        
+        print(result[:5])
 
     def __get_candle__(self, url: str, queue: Queue) -> list:
         try:
