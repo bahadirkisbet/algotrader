@@ -2,12 +2,9 @@ from datetime import timedelta, datetime
 from queue import Queue
 from threading import Thread
 from time import sleep
-from regex import W
 
 import requests
 from ExchangeCollection.ExchangeBase import *
-from concurrent.futures import ThreadPoolExecutor
-import concurrent
 
 class FTX(ExchangeBase):
     """
