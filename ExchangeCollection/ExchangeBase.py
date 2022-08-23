@@ -1,9 +1,14 @@
 from abc import abstractmethod, ABC
 from datetime import datetime
-
+import logging
+import configparser
 from CommonModels.DataModels import Interval
 
 class ExchangeBase(ABC):
+
+    def __init__(self, config: configparser.ConfigParser, logger: logging.Logger):
+        self.config = config
+        self.logger = logger
 
     @abstractmethod
     def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: str) -> list:
