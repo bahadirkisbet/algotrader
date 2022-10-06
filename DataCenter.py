@@ -1,5 +1,5 @@
 from abc import ABC
-from ExchangeCollection import *
+from exchange_collection import *
 
 
 class DataCenter(ABC):

@@ -1,6 +1,4 @@
-from ExchangeLibrary import *
-from ExchangeCollection.ExchangeBase import *
-from ExchangeCollection.ExchangeLibrary.FTX import *
+from exchange_collection.exchange_library.FTX import *
 import configparser
 
 
