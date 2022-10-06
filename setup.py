@@ -1,6 +1,7 @@
 import configparser
 import logging
 
+
 def logger_setup(config: configparser.ConfigParser) -> logging.Logger:
     # determine logger level from the config
     logging_level = config_logging_level(config)
@@ -10,7 +11,7 @@ def logger_setup(config: configparser.ConfigParser) -> logging.Logger:
     logger.setLevel(logging_level)
 
     file_handler = logging.FileHandler(config["DEFAULT"]["log_file"], mode="w")
-    
+
     # create console handler and set level to debug
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging_level)
@@ -27,7 +28,6 @@ def logger_setup(config: configparser.ConfigParser) -> logging.Logger:
     logger.addHandler(file_handler)
 
     logger.info("Logger setup complete")
-    logger.warning("test warning for isilay hanim")
 
     return logger
 
