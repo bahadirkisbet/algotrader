@@ -14,7 +14,9 @@ class ExchangeBase(ABC):
         self.logger = logger
         self.__data_callbacks__ = list()
         self.__error_callbacks__ = list()
-        self.__websocket_dict__ = dict()
+        self._websocket_dict_ = dict()
+        self._websocket_connection_count_ = dict()
+        self._max_connection_limit_ = config["EXCHANGE"]["max_connection_limit"]
 
     def register_callbacks(self, data_callbacks: list, error_callbacks=None) -> None:
         for data_callback in data_callbacks:
@@ -23,7 +25,13 @@ class ExchangeBase(ABC):
             for error_callback in error_callbacks:
                 self.__error_callbacks__.append(error_callback)
 
-    def __create_websocket_connection__(self, address, port=None):
+    def _create_websocket_connection_(self, address, port=None):
+        socket_name = f"SOCKET_{len(self._websocket_dict_)}"
+        if self._websocket_connection_count_[socket_name] < self._websocket_connection_count_:
+            # there is a available socket, use it
+            self._websocket_connection_count_[socket_name] += 1
+            return socket_name
+
         def on_message(ws: websocket.WebSocketApp, message):
             msg = json.loads(message)
             self.logger.info("Message has received: %s" % msg)
@@ -53,8 +61,9 @@ class ExchangeBase(ABC):
             on_close=on_close,
             on_open=on_open,
         )
-        socket_name = f"SOCKET_{len(self.__websocket_dict__) + 1}"
-        self.__websocket_dict__[socket_name] = socket
+        socket_name = f"SOCKET_{len(self._websocket_dict_) + 1}"
+        self._websocket_dict_[socket_name] = socket
+        self._websocket_connection_count_[socket_name] = 1
         socket.run_forever()
         return socket_name
 
