@@ -1,17 +1,16 @@
 import exchange_collection
 from setup import *
-from exchange_collection.exchange_base import *
 from exchange_collection.exchange_library.FTX import *
 
-config = configparser.ConfigParser()
-config.read("config.ini")
-logger = logger_setup(config)
-
-service: ExchangeBase = FTX(config, logger)
-
-
 if __name__ == "__main__":
-    pass
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    logger = logger_setup(config)
+
+    service: ExchangeBase = FTX(config, logger)
+    service.register_callbacks([print])
+    service.subscribe_to_websocket("BTC/USD", Interval.ONE_MINUTES)
+    input()
 
 
 
