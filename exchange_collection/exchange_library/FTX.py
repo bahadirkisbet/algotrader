@@ -1,8 +1,10 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 from queue import Queue
 from threading import Thread
 from time import sleep
+
 import requests
+
 from exchange_collection.exchange_base import *
 
 
@@ -85,8 +87,14 @@ class FTX(ExchangeBase):
                 return 86400
         return 0
 
-    def subscribe_to_websocket(self, symbol: str, interval: Interval) -> None:
-        pass
+    def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
+        socket_name = self._create_websocket_connection_(self.websocket_url)
+        socket: websocket.WebSocketApp = self._websocket_dict_[socket_name]
+        try:
+            data = "test"
+            socket.send(data)
+        except Exception as exception:
+            self.logger.exception(exception)
 
     def unsubscribe_from_websocket(self, symbol: str, interval: Interval) -> None:
         pass

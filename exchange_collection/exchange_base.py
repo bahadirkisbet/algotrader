@@ -3,6 +3,7 @@ import logging
 from abc import abstractmethod, ABC
 from datetime import datetime
 from common_models.DataModels import Interval
+from typing import List
 import json
 import websocket
 
@@ -91,7 +92,7 @@ class ExchangeBase(ABC):
         pass
 
     @abstractmethod
-    def subscribe_to_websocket(self, symbol: str, interval: Interval) -> None:
+    def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
         """
             Subscribes to websocket to get realtime data.
             
