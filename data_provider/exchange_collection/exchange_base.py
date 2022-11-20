@@ -2,7 +2,7 @@ import configparser
 import logging
 from abc import abstractmethod, ABC
 from datetime import datetime
-from common_models.DataModels import Interval
+from common_models.time_models import Interval
 from typing import List
 import json
 import websocket
@@ -28,8 +28,9 @@ class ExchangeBase(ABC):
 
     def _create_websocket_connection_(self, address, port=None):
         socket_name = f"SOCKET_{len(self._websocket_dict_)}"
-        if self._websocket_connection_count_[socket_name] < self._websocket_connection_count_:
-            # there is a available socket, use it
+        if socket_name in self._websocket_connection_count_ and \
+                self._websocket_connection_count_[socket_name] < self._max_connection_limit_:
+            # there is an available socket, use it
             self._websocket_connection_count_[socket_name] += 1
             return socket_name
 
@@ -51,7 +52,7 @@ class ExchangeBase(ABC):
         def on_open(ws: websocket.WebSocketApp):
             self.logger.info("Websocket connection is done to %s" % ws.url)
 
-        url = "wss://" + address
+        url = address
         if port is not None:
             url += ":" + str(port)
 
@@ -65,7 +66,7 @@ class ExchangeBase(ABC):
         socket_name = f"SOCKET_{len(self._websocket_dict_) + 1}"
         self._websocket_dict_[socket_name] = socket
         self._websocket_connection_count_[socket_name] = 1
-        socket.run_forever()
+        print(socket.run_forever())
         return socket_name
 
     @abstractmethod

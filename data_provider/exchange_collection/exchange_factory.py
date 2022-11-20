@@ -1,4 +1,7 @@
-from exchange_collection.exchange_library.FTX import *
+import logging
+
+from data_provider.exchange_collection.exchange_base import ExchangeBase
+from data_provider.exchange_collection.exchange_library.FTX import *
 import configparser
 
 

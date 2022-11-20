@@ -5,8 +5,6 @@ from time import sleep
 
 import requests
 
-from exchange_collection.exchange_base import *
-
 
 class FTX(ExchangeBase):
     """
@@ -60,8 +58,8 @@ class FTX(ExchangeBase):
             task.join()
 
         result = list()
-        while self.queue.empty() is False:
-            data = self.queue.get()
+        while queue.empty() is False:
+            data = queue.get()
             if data.get("success", False):  # if the request was successful, get the data
                 result.extend(data.get("result", []))
         return result
@@ -91,8 +89,9 @@ class FTX(ExchangeBase):
         socket_name = self._create_websocket_connection_(self.websocket_url)
         socket: websocket.WebSocketApp = self._websocket_dict_[socket_name]
         try:
-            data = "test"
-            socket.send(data)
+            for symbol in symbols:
+                data = json.dumps({'op': 'subscribe', 'channel': 'trades', 'market': symbol})
+                socket.send(data)
         except Exception as exception:
             self.logger.exception(exception)
 
