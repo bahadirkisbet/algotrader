@@ -1,5 +1,9 @@
+import time
 from abc import abstractmethod, ABC
 
+import websocket
+
+import data_provider.websocket_manager.websocket_manager as websocket_manager
 class Test1(ABC):
     test: str = "test1"
     test2: str = "test2"
@@ -15,7 +19,16 @@ class Test2(Test1):
         print(self.test2)
 
 
-t1 = Test1()
-t2 = Test2()
-t1.print()
-t2.print()
+name = websocket_manager.WebsocketManager.create_websocket_connection(
+            "wss://stream.binance.com:9443/ws/btcusdt@kline_1m",
+            on_message=print,
+            on_error=print,
+            on_close=print,
+            on_open=print,
+        )
+websocket_manager.WebsocketManager.start_connection(name)
+print('vbaha')
+time.sleep(10)
+print('kisbet')
+websocket_manager.WebsocketManager.end_connection(name)
+input()
