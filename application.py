@@ -1,4 +1,4 @@
-from data_provider.exchange_collection.exchange_library.Binance import *
+from data_provider.exchange_collection.exchange_library.binance.binance_base import *
 from setup import *
 
 if __name__ == "__main__":

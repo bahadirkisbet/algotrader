@@ -2,10 +2,12 @@ from datetime import timedelta
 from queue import Queue
 from threading import Thread
 from time import sleep
-
+from ..exchange_base import *
 import requests
 
-
+"""
+DEPRECATED: This is an example of how to implement a new exchange. This exchange is not supported anymore.  
+"""
 class FTX(ExchangeBase):
     """
         FTX is a cryptocurrency exchange.

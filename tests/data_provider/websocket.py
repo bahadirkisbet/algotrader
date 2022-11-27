@@ -2,6 +2,10 @@ def multiple_instance_connection_limit() -> bool:
     return True
 
 
+def basic_connection_test() -> bool:
+    return True
+
+
 if __name__ == '__main__':
 
     if not multiple_instance_connection_limit():
