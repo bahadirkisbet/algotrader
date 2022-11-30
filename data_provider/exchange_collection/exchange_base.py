@@ -4,8 +4,6 @@ from abc import abstractmethod, ABC
 from datetime import datetime
 from common_models.time_models import Interval
 from typing import List
-import json
-import websocket
 
 
 class ExchangeBase(ABC):
@@ -13,61 +11,23 @@ class ExchangeBase(ABC):
     def __init__(self, config: configparser.ConfigParser, logger: logging.Logger):
         self.config = config
         self.logger = logger
-        self.__data_callbacks__ = list()
-        self.__error_callbacks__ = list()
-        self._websocket_dict_ = dict()
-        self._websocket_connection_count_ = dict()
-        self._max_connection_limit_ = config["EXCHANGE"]["max_connection_limit"]
+        self.__development_mode__ = config["DEFAULT"].getboolean("development_mode")
 
-    def register_callbacks(self, data_callbacks: list, error_callbacks=None) -> None:
-        for data_callback in data_callbacks:
-            self.__data_callbacks__.append(data_callback)
-        if error_callbacks is not None:
-            for error_callback in error_callbacks:
-                self.__error_callbacks__.append(error_callback)
+    @abstractmethod
+    def _on_message_(self, message):
+        pass
 
-    def _create_websocket_connection_(self, address, port=None):
-        socket_name = f"SOCKET_{len(self._websocket_dict_)}"
-        if socket_name in self._websocket_connection_count_ and \
-                self._websocket_connection_count_[socket_name] < self._max_connection_limit_:
-            # there is an available socket, use it
-            self._websocket_connection_count_[socket_name] += 1
-            return socket_name
+    @abstractmethod
+    def _on_error_(self, error):
+        pass
 
-        def on_message(ws: websocket.WebSocketApp, message):
-            msg = json.loads(message)
-            self.logger.info("Message has received: %s" % msg)
-            # publish to callbacks
-            for callback in self.__data_callbacks__:
-                callback(msg)
+    @abstractmethod
+    def _on_close_(self, close_status_code, close_msg):
+        pass
 
-        def on_error(ws: websocket.WebSocketApp, error):
-            self.logger.error(error)
-            for callback in self.__error_callbacks__:
-                callback(error)
-
-        def on_close(ws: websocket.WebSocketApp, close_status_code, close_msg):
-            self.logger.warning("websocket is closed", close_status_code, close_msg)
-
-        def on_open(ws: websocket.WebSocketApp):
-            self.logger.info("Websocket connection is done to %s" % ws.url)
-
-        url = address
-        if port is not None:
-            url += ":" + str(port)
-
-        socket = websocket.WebSocketApp(
-            url=url,
-            on_message=on_message,
-            on_error=on_error,
-            on_close=on_close,
-            on_open=on_open,
-        )
-        socket_name = f"SOCKET_{len(self._websocket_dict_) + 1}"
-        self._websocket_dict_[socket_name] = socket
-        self._websocket_connection_count_[socket_name] = 1
-        print(socket.run_forever())
-        return socket_name
+    @abstractmethod
+    def _on_open_(self):
+        pass
 
     @abstractmethod
     def fetch_product_list(self):
