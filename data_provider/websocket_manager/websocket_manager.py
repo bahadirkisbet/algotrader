@@ -1,10 +1,11 @@
 import configparser
-from typing import Dict, Callable, List
-from abc import abstractmethod, ABC
 import json
-import websocket
 import ssl
 import threading
+from abc import ABC
+from typing import Dict, Callable
+
+import websocket
 
 
 class WebsocketManager(ABC):
