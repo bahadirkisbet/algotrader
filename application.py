@@ -1,3 +1,5 @@
+from common_models.exchange_type import ExchangeType
+from data_provider.exchange_collection.exchange_factory import ExchangeFactory
 from data_provider.exchange_collection.exchange_library.binance.binance_base import *
 from setup import *
 
@@ -5,12 +7,8 @@ if __name__ == "__main__":
     config = configparser.ConfigParser()
     config.read("config.ini")
     logger = logger_setup(config)
+    exchange_code = "BNB"
+    exchange_type = ExchangeType.SPOT
 
-    service: ExchangeBase = Binance(config, logger)
-    service.register_callbacks([print])
-    service.subscribe_to_websocket(["BTC-PERP"], Interval.ONE_MINUTES)
+    service: ExchangeBase = ExchangeFactory.create(exchange_code, exchange_type, config, logger)
     input()
-
-
-
-# service.fetch_candle("BTC/USDT", datetime(2017, 1, 1, 0, 0, 0), datetime.now(), Interval.ONE_HOUR)
