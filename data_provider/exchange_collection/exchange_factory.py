@@ -1,8 +1,9 @@
-from data_provider.exchange_collection.exchange_library.FTX import *
+from data_provider.exchange_collection.exchange_base import *
 from common_models.exchange_type import ExchangeType
 import configparser
 
 from data_provider.exchange_collection.exchange_library.binance.spot.binance_spot import BinanceSpot
+from data_provider.exchange_collection.exchange_library.binance.futures.binance_futures import BinanceFutures
 
 
 class ExchangeFactory:
@@ -25,7 +26,9 @@ class ExchangeFactory:
                 raise Exception("Unknown exchange")
 
     @staticmethod
-    def __create_future__(exchange_name, config: configparser.ConfigParser, logger: logging.Logger) -> ExchangeBase:
+    def __create_futures__(exchange_name, config: configparser.ConfigParser, logger: logging.Logger) -> ExchangeBase:
         match exchange_name:
+            case "BNB":
+                return BinanceFutures(config, logger)
             case _:
                 raise Exception("Unknown exchange")
