@@ -8,7 +8,11 @@ from data_provider.exchange_collection.exchange_library.binance.futures.binance_
 
 class ExchangeFactory:
     @staticmethod
-    def create(exchange_name, exchange_type: ExchangeType, config: configparser.ConfigParser, logger: logging.Logger) -> ExchangeBase:
+    def create(
+            exchange_name: str,
+            exchange_type: ExchangeType,
+            config: configparser.ConfigParser,
+            logger: logging.Logger) -> ExchangeBase:
         match exchange_type:
             case ExchangeType.SPOT:
                 return ExchangeFactory.__create_spot__(exchange_name, config, logger)

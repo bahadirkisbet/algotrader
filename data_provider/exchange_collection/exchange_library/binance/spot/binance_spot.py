@@ -40,7 +40,7 @@ class BinanceSpot(BinanceBase):
         assert "fetch_candle" in self.api_endpoints, "fetch_candle endpoint not defined"
         assert self.api_url is not None, "api_url not defined"
 
-        url_list = self.__create_url_list__(endDate, interval, startDate, symbol)
+        url_list = self._create_url_list_(endDate, interval, startDate, symbol)
 
         with multiprocessing.pool.ThreadPool() as pool:
             response_list = pool.starmap(self.__make_request__, url_list)
@@ -64,22 +64,6 @@ class BinanceSpot(BinanceBase):
             volume=float(item[5]),
             trade_count=int(item[8])
         ) for item in json]
-
-    def __create_url_list__(self, endDate, interval, startDate, symbol):
-        url_list = []
-        current_date = startDate
-        while current_date <= endDate:
-            # noinspection PyTypeChecker
-            next_date = current_date + datetime.timedelta(minutes=interval.value)
-            url = self.api_url + self.api_endpoints["fetch_candle"].format(
-                symbol=symbol,
-                interval=self.interval_to_granularity(interval),
-                start=int(current_date.timestamp() * 1000),
-                end=int(next_date.timestamp() * 1000)
-            )
-            url_list.append([url])
-            current_date = next_date
-        return url_list
 
     # SOCKET RELATED METHODS #
 

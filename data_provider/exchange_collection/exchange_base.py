@@ -76,15 +76,17 @@ class ExchangeBase(ABC):
         """
         pass
 
-    def interval_to_granularity(self, interval: Interval) -> int:
+    def interval_to_granularity(self, interval: Interval) -> str:
         """
             Converts interval to the requested granularity of an exchange.
             
                 - interval: Interval -> Interval of the candle data.
-                    - Example: Let's say exchange says that give me the intervals in seconds,
-                        - "1m" -> 60
-                        - "5m" -> 300
-                        - "1h" -> 3600
-                        - "1d" -> 86400
+                    - Example: "1m", "5m", "1h", "1d"
+                    That is,
+                    - Interval.ONE_MINUTES -> "1m"
+                    - Interval.FIVE_MINUTES -> "5m"
+                    - Interval.FIFTEEN_MINUTES -> "15m"
+                    - Interval.ONE_HOUR -> "1h"
+
         """
         pass
