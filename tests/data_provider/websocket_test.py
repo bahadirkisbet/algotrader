@@ -25,5 +25,6 @@ class TestWebsocket(unittest.TestCase):
         )
         self.assertEqual(name, "SOCKET_1", "Websocket name is not correct")
 
+
 if __name__ == "__main__":
     unittest.main()

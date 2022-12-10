@@ -1,9 +1,7 @@
 import time
-from abc import abstractmethod, ABC
+from abc import ABC
 
-import websocket
-
-import data_provider.websocket_manager.websocket_manager as websocket_manager
+import utils.websocket_manager.websocket_manager as websocket_manager
 
 
 class Test1(ABC):
