@@ -1,5 +1,4 @@
 
-
 class Candle:
     """
         A class to represent a candlestick.
@@ -19,3 +18,17 @@ class Candle:
         self.volume = volume
         self.timestamp = timestamp
         self.trade_count = trade_count
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.open} - {self.high} - {self.low} - {self.close} - {self.volume} - {self.trade_count}"
+
+    def get_readable(self):
+        return f"""
+            Timestamp: {self.timestamp}
+            Open: {self.open}
+            High: {self.high}
+            Low: {self.low}
+            Close: {self.close}
+            Volume: {self.volume}
+            Trade Count: {self.trade_count}
+        """
