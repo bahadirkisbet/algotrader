@@ -30,14 +30,14 @@ class ExchangeBase(ABC):
         pass
 
     @abstractmethod
-    def fetch_product_list(self):
+    def fetch_product_list(self) -> List[str]:
         """
         :return: Retrieves trade-able product list of the relevant exchange
         """
         pass
 
     @abstractmethod
-    def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: str) -> list:
+    def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: Interval) -> list:
         """
             Fetches candle data from exchange. In general, it is meant to do it concurrently.
             
