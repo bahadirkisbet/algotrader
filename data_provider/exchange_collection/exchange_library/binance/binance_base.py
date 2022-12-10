@@ -1,6 +1,6 @@
-from data_provider.exchange_collection.exchange_base import *
-from common_models.time_models import Interval
 import datetime
+
+from data_provider.exchange_collection.exchange_base import *
 
 
 class BinanceBase(ExchangeBase, ABC):

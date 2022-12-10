@@ -8,6 +8,7 @@ from typing import Dict, Callable
 import websocket
 
 
+# noinspection PyUnusedLocal
 class WebsocketManager(ABC):
     WebsocketDict: Dict[str, websocket.WebSocketApp] = {}
     WebsocketConnectionCount: Dict[str, int] = {}

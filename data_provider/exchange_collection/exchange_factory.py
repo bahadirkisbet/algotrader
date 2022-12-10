@@ -1,9 +1,7 @@
-from data_provider.exchange_collection.exchange_base import *
 from common_models.exchange_type import ExchangeType
-import configparser
-
-from data_provider.exchange_collection.exchange_library.binance.spot.binance_spot import BinanceSpot
+from data_provider.exchange_collection.exchange_base import *
 from data_provider.exchange_collection.exchange_library.binance.futures.binance_futures import BinanceFutures
+from data_provider.exchange_collection.exchange_library.binance.spot.binance_spot import BinanceSpot
 
 
 class ExchangeFactory:

@@ -2,8 +2,9 @@ import configparser
 import logging
 from abc import abstractmethod, ABC
 from datetime import datetime
-from common_models.time_models import Interval
 from typing import List
+
+from common_models.time_models import Interval
 
 
 class ExchangeBase(ABC):

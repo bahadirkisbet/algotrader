@@ -1,11 +1,11 @@
 import multiprocessing
 import multiprocessing.pool
 
+import requests
+
 from common_models.data_models.candle import Candle
 from common_models.exchange_type import ExchangeType
 from ..binance_base import *
-import requests
-import datetime
 
 
 class BinanceSpot(BinanceBase):

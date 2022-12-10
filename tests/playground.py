@@ -1,7 +1,6 @@
-import time
 from abc import ABC
 
-import utils.websocket_manager.websocket_manager as websocket_manager
+from data_center.data_center import DataCenter
 
 
 class Test1(ABC):
@@ -20,16 +19,7 @@ class Test2(Test1):
         print(self.test2)
 
 
-name = websocket_manager.WebsocketManager.create_websocket_connection(
-    "wss://stream.binance.com:9443/ws/btcusdt@kline_1m",
-    on_message=print,
-    on_error=print,
-    on_close=print,
-    on_open=print,
-)
-websocket_manager.WebsocketManager.start_connection(name)
-print('vbaha')
-time.sleep(10)
-print('kisbet')
-websocket_manager.WebsocketManager.end_connection(name)
-input()
+test = DataCenter(1)
+test2 = DataCenter(2)
+print(test.test)
+print(test2.test)

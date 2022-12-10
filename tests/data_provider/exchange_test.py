@@ -1,7 +1,8 @@
+import datetime
 import unittest
+
 from data_provider.exchange_collection.exchange_factory import *
 from setup import *
-import datetime
 
 
 class TestExchangeBase(unittest.TestCase):

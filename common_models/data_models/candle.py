@@ -20,7 +20,13 @@ class Candle:
         self.trade_count = trade_count
 
     def __str__(self):
-        return f"{self.timestamp} - {self.open} - {self.high} - {self.low} - {self.close} - {self.volume} - {self.trade_count}"
+        return f"{self.timestamp} - " \
+               f"{self.open} - " \
+               f"{self.high} - " \
+               f"{self.low} - " \
+               f"{self.close} - " \
+               f"{self.volume} - " \
+               f"{self.trade_count}"
 
     def get_readable(self):
         return f"""
