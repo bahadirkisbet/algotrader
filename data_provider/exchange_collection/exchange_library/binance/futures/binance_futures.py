@@ -1,7 +1,7 @@
 from ..binance_base import *
 
 
-class BinanceFuture(BinanceBase):
+class BinanceFutures(BinanceBase):
     """
         Binance is a cryptocurrency exchange.
         - https://www.binance.com/
