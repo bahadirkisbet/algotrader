@@ -1,7 +1,7 @@
-from enum import Enum, auto
+from enum import IntEnum
 
 
-class Interval(Enum):
+class Interval(IntEnum):
     """
         Interval of the candle data.
         - Example: Let's say exchange says that give me the intervals in seconds,
@@ -10,9 +10,13 @@ class Interval(Enum):
             - "1h" -> 3600
             - "1d" -> 86400
     """
-    ONE_MINUTES = auto()
-    FIVE_MINUTES = auto()
-    FIFTEEN_MINUTES = auto()
-    THIRTY_MINUTES = auto()
-    ONE_HOUR = auto()
-    ONE_DAY = auto()
+    ONE_MINUTES = 1
+    FIVE_MINUTES = 5
+    FIFTEEN_MINUTES = 15
+    THIRTY_MINUTES = 30
+    ONE_HOUR = 60
+    ONE_DAY = 1440
+
+
+if __name__ == "__main__":
+    print(Interval.FIVE_MINUTES.value)
