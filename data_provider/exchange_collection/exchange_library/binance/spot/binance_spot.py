@@ -6,7 +6,7 @@ import requests
 from common_models.data_models.candle import Candle
 from common_models.exchange_type import ExchangeType
 from ..binance_base import *
-
+from threading import Semaphore
 
 class BinanceSpot(BinanceBase):
     """
@@ -23,6 +23,7 @@ class BinanceSpot(BinanceBase):
 
     def __init__(self, config: configparser.ConfigParser, logger: logging.Logger):
         super().__init__(config, logger)
+        self.request_lock = Semaphore(50)
 
     def fetch_product_list(self) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "fetch_product_list endpoint not defined"
@@ -41,7 +42,7 @@ class BinanceSpot(BinanceBase):
         assert self.api_url is not None, "api_url not defined"
 
         url_list = self._create_url_list_(endDate, interval, startDate, symbol)
-
+        print(len(url_list))
         with multiprocessing.pool.ThreadPool() as pool:
             response_list = pool.starmap(self.__make_request__, url_list)
             result = [item for response in response_list if response is not None for item in response]
@@ -49,7 +50,10 @@ class BinanceSpot(BinanceBase):
         return result
 
     def __make_request__(self, url):
+        self.logger.info(f"Fetching candle data from {url} at {self.request_lock}")
+        self.request_lock.acquire()
         response = requests.get(url)
+        self.request_lock.release()
         if response.status_code != 200:
             self.logger.warning(f"Error while fetching candle - {response.status_code} - {response.text} - {url}")
             return None
