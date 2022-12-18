@@ -1,7 +1,7 @@
 import configparser
 import logging
+import datetime
 from abc import abstractmethod, ABC
-from datetime import datetime
 from typing import List
 
 from common_models.time_models import Interval
@@ -38,7 +38,7 @@ class ExchangeBase(ABC):
         pass
 
     @abstractmethod
-    def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: Interval) -> list:
+    def fetch_candle(self, symbol: str, startDate: datetime.datetime, endDate: datetime.datetime, interval: Interval) -> list:
         """
             Fetches candle data from exchange. In general, it is meant to do it concurrently.
             

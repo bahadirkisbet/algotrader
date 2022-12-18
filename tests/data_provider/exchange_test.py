@@ -1,8 +1,7 @@
 import datetime
 import unittest
 
-from data_provider.exchange_collection.exchange_factory import *
-from setup import *
+from data_provider.exchange_collection.exchange_factory import ExchangeType, ExchangeFactory, ExchangeBase, Interval
 
 
 class TestExchangeBase(unittest.TestCase):
@@ -37,8 +36,8 @@ class TestExchangeBase(unittest.TestCase):
             logger)
         symbol = "BTCUSDT"
         start_date = datetime.datetime(2021, 1, 1)
-        end_date = datetime.datetime(2021, 12, 2)
-        candles = exchange.fetch_candle(symbol, start_date, end_date, Interval.ONE_DAY)
+        end_date = datetime.datetime(2022, 1, 1)
+        candles = exchange.fetch_candle(symbol, start_date, end_date, Interval.FIVE_MINUTES)
         self.assertIsNotNone(candles, "Candles are empty")
 
 
