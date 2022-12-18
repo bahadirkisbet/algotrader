@@ -34,8 +34,9 @@ class BinanceBase(ExchangeBase, ABC):
     def _create_url_list_(self, endDate, interval, startDate, symbol):
         url_list = []
         current_date = startDate
+        limit = 1000
         while current_date <= endDate:
-            next_date = current_date + datetime.timedelta(minutes=interval.value)
+            next_date = current_date + datetime.timedelta(minutes=interval.value * limit)
             url = self.api_url + self.api_endpoints["fetch_candle"].format(
                 symbol=symbol,
                 interval=self.interval_to_granularity(interval),
