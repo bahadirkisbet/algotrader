@@ -1,12 +1,12 @@
 from common_models.exchange_type import ExchangeType
 from data_provider.exchange_collection.exchange_factory import ExchangeFactory
 from data_provider.exchange_collection.exchange_library.binance.binance_base import *
-from setup import *
+from utils.config_manager.config_manager import ConfigManager
+from utils.log_manager.log_manager import LogManager
 
 if __name__ == "__main__":
-    config = configparser.ConfigParser()
-    config.read("config.ini")
-    logger = logger_setup(config)
+    config = ConfigManager.get_config()
+    logger = LogManager.get_logger(config)
     exchange_code = "BNB"
     exchange_type = ExchangeType.SPOT
 
