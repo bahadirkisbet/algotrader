@@ -13,7 +13,7 @@ from threading import Semaphore
 class BinanceSpot(BinanceBase):
     """
         Binance is a cryptocurrency exchange.
-        - https://www.binance.com/
+            - https://www.binance.com/
     """
     exchange_type: ExchangeType = ExchangeType.SPOT
     websocket_url: str = "wss://stream.binance.com:9443/ws"
@@ -23,12 +23,15 @@ class BinanceSpot(BinanceBase):
         "fetch_product_list": "/api/v3/exchangeInfo"
     }
 
-    def __init__(self, config: configparser.ConfigParser, logger: logging.Logger):
-        super().__init__(config, logger)
+    def __init__(self):
+        super().__init__()
         self.request_lock = Semaphore(50)
 
     def fetch_product_list(self) -> List[str]:
-        assert "fetch_product_list" in self.api_endpoints, "fetch_product_list endpoint not defined"
+        assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
+
+        if self.__development_mode__:
+            return ["BTCUSDT"]
 
         url = self.api_url + self.api_endpoints["fetch_product_list"]
         response = requests.get(url)

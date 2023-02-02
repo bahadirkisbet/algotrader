@@ -1,14 +1,9 @@
-from common_models.exchange_type import ExchangeType
-from data_provider.exchange_collection.exchange_factory import ExchangeFactory
-from data_provider.exchange_collection.exchange_library.binance.binance_base import *
-from utils.config_manager.config_manager import ConfigManager
-from utils.log_manager.log_manager import LogManager
+from startup import ServiceManager
+
 
 if __name__ == "__main__":
-    config = ConfigManager.get_config()
-    logger = LogManager.get_logger(config)
-    exchange_code = "BNB"
-    exchange_type = ExchangeType.SPOT
+    ServiceManager.initialize_logger()
+    ServiceManager.initialize_config()
+    ServiceManager.initialize_exchange_service()
 
-    service: ExchangeBase = ExchangeFactory.create(exchange_code, exchange_type, config, logger)
     input()

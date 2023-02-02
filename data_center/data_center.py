@@ -4,15 +4,17 @@ from typing import List
 
 from common_models.data_models.candle import Candle
 from data_provider.exchange_collection.exchange_base import ExchangeBase
+from startup import ServiceManager
 from utils.singleton_metaclass.singleton import Singleton
 from common_models.time_models import Interval
 
 
 class DataCenter(metaclass=Singleton):
-    def __init__(self, logger: logging.Logger, exchange: ExchangeBase):
+    def __init__(self):
         self.__buffer__: List[Candle] = []
-        self.exchange = exchange
-        self.logger = logger
+        self.exchange = ServiceManager.get_service("exchange")
+        self.logger = ServiceManager.get_service("logger")
+        self.config = ServiceManager.get_service("config")
 
     def start(self):
         symbols = self.exchange.fetch_product_list()

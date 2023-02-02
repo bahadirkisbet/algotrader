@@ -8,29 +8,27 @@ class ExchangeFactory:
     @staticmethod
     def create(
             exchange_name: str,
-            exchange_type: ExchangeType,
-            config: configparser.ConfigParser,
-            logger: logging.Logger) -> ExchangeBase:
+            exchange_type: ExchangeType) -> ExchangeBase:
         match exchange_type:
             case ExchangeType.SPOT:
-                return ExchangeFactory.__create_spot__(exchange_name, config, logger)
+                return ExchangeFactory.__create_spot__(exchange_name)
             case ExchangeType.FUTURES:
-                return ExchangeFactory.__create_futures__(exchange_name, config, logger)
+                return ExchangeFactory.__create_futures__(exchange_name)
             case _:
                 raise Exception("Unknown exchange type")
 
     @staticmethod
-    def __create_spot__(exchange_name, config: configparser.ConfigParser, logger: logging.Logger) -> ExchangeBase:
+    def __create_spot__(exchange_name) -> ExchangeBase:
         match exchange_name:
             case "BNB":
-                return BinanceSpot(config, logger)
+                return BinanceSpot()
             case _:
                 raise Exception("Unknown exchange")
 
     @staticmethod
-    def __create_futures__(exchange_name, config: configparser.ConfigParser, logger: logging.Logger) -> ExchangeBase:
+    def __create_futures__(exchange_name) -> ExchangeBase:
         match exchange_name:
             case "BNB":
-                return BinanceFutures(config, logger)
+                return BinanceFutures()
             case _:
                 raise Exception("Unknown exchange")

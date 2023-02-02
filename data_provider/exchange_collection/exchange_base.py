@@ -5,14 +5,16 @@ from abc import abstractmethod, ABC
 from typing import List
 
 from common_models.time_models import Interval
+from startup import ServiceManager
 
 
 class ExchangeBase(ABC):
 
-    def __init__(self, config: configparser.ConfigParser, logger: logging.Logger):
-        self.config = config
-        self.logger = logger
-        self.__development_mode__ = config["DEFAULT"].getboolean("development_mode")
+    def __init__(self):
+        self.config = ServiceManager.get_service("config")
+        self.logger = ServiceManager.get_service("logger")
+        self.__development_mode__ = self.config["DEFAULT"].getboolean("development_mode")
+        self.__symbol_to_ws__ = {}
 
     @abstractmethod
     def _on_message_(self, message):
@@ -42,14 +44,14 @@ class ExchangeBase(ABC):
         """
             Fetches candle data from exchange. In general, it is meant to do it concurrently.
             
-                - symbol: str -> Symbol of the asset in the corresponding exchange.
-                    - Example: "BTC/USDT", "ETH/USDT", "LTC/USDT", "BTCUSDT", "ETHUSDT", "LTCUSDT"
-                - startDate: datetime -> Start date of the candle data.
-                    - Example: datetime(2020, 1, 1, 0, 0, 0)
-                - endDate: datetime -> End date of the candle data.
-                    - Example: datetime(2022, 1, 1, 0, 0, 0)
-                - interval: str -> Interval of the candle data.
-                    - Example: "1m", "5m", "1h", "1d"
+            symbol: str -> Symbol of the asset in the corresponding exchange.
+                Example: "BTC/USDT", "ETH/USDT", "LTC/USDT", "BTCUSDT", "ETHUSDT", "LTCUSDT"
+            startDate: datetime -> Start date of the candle data.
+                Example: datetime(2020, 1, 1, 0, 0, 0)
+            endDate: datetime -> End date of the candle data.
+                Example: datetime(2022, 1, 1, 0, 0, 0)
+            interval: str -> Interval of the candle data.
+                Example: "1m", "5m", "1h", "1d"
         """
         pass
 

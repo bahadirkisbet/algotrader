@@ -13,8 +13,8 @@ class BinanceBase(ExchangeBase, ABC):
     api_url: str | None = None
     api_endpoints: dict | None = None
 
-    def __init__(self, config: configparser.ConfigParser, logger: logging.Logger):
-        super().__init__(config, logger)
+    def __init__(self):
+        super().__init__()
 
     def interval_to_granularity(self, interval: Interval) -> object:
         match interval:
