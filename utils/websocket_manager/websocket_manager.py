@@ -4,7 +4,7 @@ import ssl
 import threading
 from abc import ABC
 from typing import Dict, Callable
-
+from threading import Semaphore
 import websocket
 
 
@@ -14,6 +14,7 @@ class WebsocketManager(ABC):
     WebsocketConnectionCount: Dict[str, int] = {}
     MaxConnectionLimit: int = 50
     __tasks__: Dict[str, threading.Thread] = {}
+    __socket_lock_dict__: Dict[str, Semaphore] = {}
 
     @staticmethod
     def read_config(config: configparser.ConfigParser):
@@ -43,6 +44,7 @@ class WebsocketManager(ABC):
                 on_close(close_status_code, close_msg)
 
         def on_open_wrapper(ws: websocket.WebSocketApp):
+            WebsocketManager.__socket_lock_dict__[socket_name].release()
             if on_open is not None:
                 on_open()
 
@@ -59,6 +61,7 @@ class WebsocketManager(ABC):
         )
         WebsocketManager.WebsocketDict[socket_name] = socket
         WebsocketManager.WebsocketConnectionCount[socket_name] = 1
+        WebsocketManager.__socket_lock_dict__[socket_name] = Semaphore(0)
         return socket_name
 
     @staticmethod
@@ -67,8 +70,9 @@ class WebsocketManager(ABC):
             target=WebsocketManager.WebsocketDict[name].run_forever,
             kwargs=dict(sslopt={"cert_reqs": ssl.CERT_NONE})
         )
-        WebsocketManager.__tasks__[name] = t
         t.start()
+        WebsocketManager.__socket_lock_dict__[name].acquire()
+        WebsocketManager.__tasks__[name] = t
 
     @staticmethod
     def end_connection(name):
