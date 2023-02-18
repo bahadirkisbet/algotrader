@@ -1,5 +1,3 @@
-import configparser
-import logging
 import datetime
 from abc import abstractmethod, ABC
 from typing import List
@@ -15,6 +13,10 @@ class ExchangeBase(ABC):
         self.logger = ServiceManager.get_service("logger")
         self.__development_mode__ = self.config["DEFAULT"].getboolean("development_mode")
         self.__symbol_to_ws__ = {}
+        self.name: str = "NotSet"
+        self.websocket_url: str = "NotSet"
+        self.api_url: str = "NotSet"
+        self.api_endpoints: dict = {}
 
     @abstractmethod
     def _on_message_(self, message):
@@ -40,7 +42,8 @@ class ExchangeBase(ABC):
         pass
 
     @abstractmethod
-    def fetch_candle(self, symbol: str, startDate: datetime.datetime, endDate: datetime.datetime, interval: Interval) -> list:
+    def fetch_candle(self, symbol: str, startDate: datetime.datetime, endDate: datetime.datetime,
+                     interval: Interval) -> list:
         """
             Fetches candle data from exchange. In general, it is meant to do it concurrently.
             
@@ -79,6 +82,7 @@ class ExchangeBase(ABC):
         """
         pass
 
+    @abstractmethod
     def interval_to_granularity(self, interval: Interval) -> str:
         """
             Converts interval to the requested granularity of an exchange.
@@ -93,3 +97,44 @@ class ExchangeBase(ABC):
 
         """
         pass
+
+    @abstractmethod
+    def get_max_candle_limit(self) -> int:
+        """
+            Returns the maximum number of candles that can be fetched in a single request.
+        """
+        pass
+
+    @abstractmethod
+    def convert_datetime_to_exchange_timestamp(self, dt: datetime.datetime) -> str:
+        """
+            Converts datetime to exchange timestamp.
+        """
+        pass
+
+    # Helper methods for child classes
+    def _create_url_list_(self,
+                          startDate: datetime.datetime,
+                          endDate: datetime.datetime,
+                          interval: Interval,
+                          symbol: str):
+        assert "fetch_candle" in self.api_endpoints, "fetch_candle endpoint is not defined in api_endpoints"
+        assert self.interval_to_granularity(interval) is not None, "interval_to_granularity is not implemented"
+        assert self.get_max_candle_limit() is not None, "get_max_candle_limit is not implemented"
+        assert self.convert_datetime_to_exchange_timestamp(startDate) is not None, "convert_datetime_to_exchange_timestamp is not implemented"
+
+        url_list = []
+        current_date = startDate
+        limit = self.get_max_candle_limit()
+        while current_date <= endDate:
+            next_date = current_date + datetime.timedelta(minutes=interval.value * limit)
+            url = self.api_url + self.api_endpoints["fetch_candle"].format(
+                symbol,
+                self.interval_to_granularity(interval),
+                self.convert_datetime_to_exchange_timestamp(current_date),
+                self.convert_datetime_to_exchange_timestamp(next_date),
+                limit
+            )
+            url_list.append([url])
+            current_date = next_date
+        return url_list

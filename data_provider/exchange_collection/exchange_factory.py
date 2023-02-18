@@ -1,7 +1,6 @@
 from common_models.exchange_type import ExchangeType
 from data_provider.exchange_collection.exchange_base import *
-from data_provider.exchange_collection.exchange_library.binance.futures.binance_futures import BinanceFutures
-from data_provider.exchange_collection.exchange_library.binance.spot.binance_spot import BinanceSpot
+from data_provider.exchange_collection.exchange_library.binance_spot import BinanceSpot
 
 
 class ExchangeFactory:
@@ -9,11 +8,10 @@ class ExchangeFactory:
     def create(
             exchange_name: str,
             exchange_type: ExchangeType) -> ExchangeBase:
+
         match exchange_type:
             case ExchangeType.SPOT:
                 return ExchangeFactory.__create_spot__(exchange_name)
-            case ExchangeType.FUTURES:
-                return ExchangeFactory.__create_futures__(exchange_name)
             case _:
                 raise Exception("Unknown exchange type")
 
@@ -25,10 +23,3 @@ class ExchangeFactory:
             case _:
                 raise Exception("Unknown exchange")
 
-    @staticmethod
-    def __create_futures__(exchange_name) -> ExchangeBase:
-        match exchange_name:
-            case "BNB":
-                return BinanceFutures()
-            case _:
-                raise Exception("Unknown exchange")

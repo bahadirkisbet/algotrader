@@ -6,26 +6,34 @@ import requests
 from common_models.data_models.candle import Candle
 from common_models.exchange_type import ExchangeType
 from utils.websocket_manager.websocket_manager import WebsocketManager
-from ..binance_base import *
+from data_provider.exchange_collection.exchange_base import *
 from threading import Semaphore
 
 
-class BinanceSpot(BinanceBase):
+class BinanceSpot(ExchangeBase):
     """
         Binance is a cryptocurrency exchange.
             - https://www.binance.com/
     """
-    exchange_type: ExchangeType = ExchangeType.SPOT
-    websocket_url: str = "wss://stream.binance.com:9443/ws"
-    api_url = "https://api.binance.com"
-    api_endpoints: dict = {
-        "fetch_candle": "/api/v3/klines?symbol={symbol}&interval={interval}&startTime={start}&endTime={end}&limit=1000",
-        "fetch_product_list": "/api/v3/exchangeInfo"
-    }
+
+
 
     def __init__(self):
         super().__init__()
         self.request_lock = Semaphore(50)
+        self.exchange_type: ExchangeType = ExchangeType.SPOT
+        self.websocket_url: str = "wss://stream.binance.com:9443/ws"
+        self.api_url = "https://api.binance.com"
+        self.api_endpoints: dict = {
+            "fetch_candle": "/api/v3/klines?symbol={}&interval={}&startTime={}&endTime={}&limit={}",
+            "fetch_product_list": "/api/v3/exchangeInfo"
+        }
+
+    def get_max_candle_limit(self) -> int:
+        return 1000
+
+    def convert_datetime_to_exchange_timestamp(self, dt: datetime.datetime) -> str:
+        return str(int(dt.timestamp() * 1000))
 
     def fetch_product_list(self) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
@@ -45,7 +53,7 @@ class BinanceSpot(BinanceBase):
         assert "fetch_candle" in self.api_endpoints, "fetch_candle endpoint not defined"
         assert self.api_url is not None, "api_url not defined"
 
-        url_list = self._create_url_list_(endDate, interval, startDate, symbol)
+        url_list = self._create_url_list_(startDate, endDate, interval, symbol)
 
         with multiprocessing.pool.ThreadPool() as pool:
             response_list = pool.starmap(self.__make_request__, url_list)
@@ -76,6 +84,8 @@ class BinanceSpot(BinanceBase):
     # SOCKET RELATED METHODS #
 
     def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
+        assert self.websocket_url is not None, "websocket_url not defined"
+
         websocket_name = WebsocketManager.create_websocket_connection(
             address=self.websocket_url,
             port=None,
@@ -113,3 +123,18 @@ class BinanceSpot(BinanceBase):
 
     def _on_open_(self):
         pass
+
+    def interval_to_granularity(self, interval: Interval) -> object:
+        match interval:
+            case Interval.ONE_MINUTES:
+                return "1m"
+            case Interval.FIVE_MINUTES:
+                return "5m"
+            case Interval.FIFTEEN_MINUTES:
+                return "15m"
+            case Interval.ONE_HOUR:
+                return "1h"
+            case Interval.ONE_DAY:
+                return "1d"
+            case _:
+                raise Exception("Interval not supported")
