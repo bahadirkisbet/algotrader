@@ -1,4 +1,6 @@
+import configparser
 import datetime
+import logging
 from abc import abstractmethod, ABC
 from typing import List
 
@@ -9,9 +11,9 @@ from startup import ServiceManager
 class ExchangeBase(ABC):
 
     def __init__(self):
-        self.config = ServiceManager.get_service("config")
-        self.logger = ServiceManager.get_service("logger")
-        self.__development_mode__ = self.config["DEFAULT"].getboolean("development_mode")
+        self.config: configparser.ConfigParser = ServiceManager.get_service("config")
+        self.logger: logging.Logger = ServiceManager.get_service("logger")
+        self.__development_mode__: bool = self.config["DEFAULT"].getboolean("development_mode")
         self.__symbol_to_ws__ = {}
         self.name: str = "NotSet"
         self.websocket_url: str = "NotSet"
