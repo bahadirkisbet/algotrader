@@ -25,7 +25,7 @@ class BinanceSpot(ExchangeBase):
         self.api_url = "https://api.binance.com"
         self.api_endpoints: dict = {
             "fetch_candle": "/api/v3/klines?symbol={}&interval={}&startTime={}&endTime={}&limit={}",
-            "fetch_product_list": "/api/v3/exchangeInfo"
+            "fetch_product_list": "/api/v3/ticker/24hr"
         }
 
     def get_max_candle_limit(self) -> int:
@@ -34,7 +34,7 @@ class BinanceSpot(ExchangeBase):
     def convert_datetime_to_exchange_timestamp(self, dt: datetime.datetime) -> str:
         return str(int(dt.timestamp() * 1000))
 
-    def fetch_product_list(self) -> List[str]:
+    def fetch_product_list(self, sortingOption: SortingOption = None, limit: int = -1) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
 
         if self.__development_mode__:
@@ -44,9 +44,33 @@ class BinanceSpot(ExchangeBase):
         response = requests.get(url)
         if response.status_code != 200:
             raise Exception("Error while fetching product list")
-        json_data = response.json()
         # first filter by status == TRADING then select only the symbol
-        return [product["symbol"] for product in json_data["symbols"] if product["status"] == "TRADING"]
+        data = response.json()
+
+        if sortingOption is not None:
+            data = self.__apply_sorting_options__(data, sortingOption)
+
+        if limit > 0:
+            data = data[:limit]
+
+        return [product["symbol"] for product in data]
+
+    @staticmethod
+    def __apply_sorting_options__(data, sortingOption):
+        match sortingOption.sort_by:
+            case SortBy.SYMBOL:
+                data = sorted(data, key=lambda x: x["symbol"], reverse=sortingOption.sort_order.value)
+            case SortBy.PRICE:
+                data = sorted(data, key=lambda x: x["lastPrice"], reverse=sortingOption.sort_order.value)
+            case SortBy.VOLUME:
+                data = sorted(data, key=lambda x: x["volume"], reverse=sortingOption.sort_order.value)
+            case SortBy.CHANGE:
+                data = sorted(data, key=lambda x: x["priceChange"], reverse=sortingOption.sort_order.value)
+            case SortBy.CHANGE_PERCENT:
+                data = sorted(data, key=lambda x: x["priceChangePercent"], reverse=sortingOption.sort_order.value)
+            case _:
+                pass
+        return data
 
     def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: Interval) -> List[Candle]:
         assert "fetch_candle" in self.api_endpoints, "fetch_candle endpoint not defined"
@@ -68,7 +92,7 @@ class BinanceSpot(ExchangeBase):
         if response.status_code != 200:
             self.logger.warning(f"Error while fetching candle - {response.status_code} - {response.text} - {url}")
             return None
-        json = response.json()
+        json_data = response.json()
 
         return [Candle(
             timestamp=int(item[0]),
@@ -78,7 +102,7 @@ class BinanceSpot(ExchangeBase):
             close=float(item[4]),
             volume=float(item[5]),
             trade_count=int(item[8])
-        ) for item in json]
+        ) for item in json_data]
 
     # SOCKET RELATED METHODS #
 
