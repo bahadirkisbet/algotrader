@@ -4,6 +4,7 @@ import logging
 from abc import abstractmethod, ABC
 from typing import List
 
+from common_models.sorting_option import *
 from common_models.time_models import Interval
 from startup import ServiceManager
 
@@ -37,7 +38,7 @@ class ExchangeBase(ABC):
         pass
 
     @abstractmethod
-    def fetch_product_list(self) -> List[str]:
+    def fetch_product_list(self, sortingOption: SortingOption = None, limit: int = -1) -> List[str]:
         """
         :return: Retrieves trade-able product list of the relevant exchange
         """
