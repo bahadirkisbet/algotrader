@@ -1,3 +1,4 @@
+import json
 import multiprocessing
 import multiprocessing.pool
 
@@ -15,8 +16,6 @@ class BinanceSpot(ExchangeBase):
         Binance is a cryptocurrency exchange.
             - https://www.binance.com/
     """
-
-
 
     def __init__(self):
         super().__init__()
@@ -85,7 +84,7 @@ class BinanceSpot(ExchangeBase):
 
     def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
         assert self.websocket_url is not None, "websocket_url not defined"
-
+        print(self.websocket_url)
         websocket_name = WebsocketManager.create_websocket_connection(
             address=self.websocket_url,
             port=None,
@@ -95,17 +94,26 @@ class BinanceSpot(ExchangeBase):
             on_open=self._on_open_)
         WebsocketManager.start_connection(websocket_name)
         socket = WebsocketManager.WebsocketDict[websocket_name]
+
+        self.logger.info(f"Subscribing to {symbols} at {websocket_name}")
         for symbol in symbols:
             self.__symbol_to_ws__[symbol] = websocket_name
             socket.send(self.__prepare_subscribe_message__(symbol, interval))
+            self.logger.info(f"Subscribed to {symbol} at {websocket_name}")
 
-    @staticmethod
-    def __prepare_subscribe_message__(symbol: str, interval: Interval) -> str:
-        return f"{{\"method\": \"SUBSCRIBE\", \"params\": [\"{symbol.lower()}@kline_{interval.value}\"], \"id\": 1}}"
+    def __prepare_subscribe_message__(self, symbol: str, interval: Interval) -> str:
+        return json.dumps({
+            "method": "SUBSCRIBE",
+            "params": [f"{symbol.lower()}@kline_{self.interval_to_granularity(interval)}"],
+            "id": 1
+        })
 
-    @staticmethod
-    def __prepare_unsubscribe_message__(symbol: str, interval: Interval) -> str:
-        return f"{{\"method\": \"UNSUBSCRIBE\", \"params\": [\"{symbol.lower()}@kline_{interval.value}\"], \"id\": 1}}"
+    def __prepare_unsubscribe_message__(self, symbol: str, interval: Interval) -> str:
+        return json.dumps({
+            "method": "UNSUBSCRIBE",
+            "params": [f"{symbol.lower()}@kline_{self.interval_to_granularity(interval)}"],
+            "id": 1
+        })
 
     def unsubscribe_from_websocket(self, symbol: str, interval: Interval) -> None:
         socket_name = self.__symbol_to_ws__[symbol]
@@ -113,16 +121,16 @@ class BinanceSpot(ExchangeBase):
         socket.send(self.__prepare_unsubscribe_message__(symbol, interval))
 
     def _on_message_(self, message):
-        pass
+        self.logger.info(message)
 
     def _on_error_(self, error):
-        pass
+        self.logger.info(error)
 
     def _on_close_(self, close_status_code, close_msg):
-        pass
+        self.logger.info(close_status_code, close_msg)
 
     def _on_open_(self):
-        pass
+        self.logger.info("opened")
 
     def interval_to_granularity(self, interval: Interval) -> object:
         match interval:
