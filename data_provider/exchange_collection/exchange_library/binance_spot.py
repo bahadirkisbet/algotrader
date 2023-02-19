@@ -142,8 +142,8 @@ class Binance(ExchangeBase):
         socket.send(self.__prepare_unsubscribe_message__(symbol, interval))
 
     def _on_message_(self, message):
-        self.logger.info(message)
-        data = json.loads(message)
+        print(message) # to avoid actual logging, we may print this, but it will be printed in the console
+        data = message
         event_time = data["E"]
         candle_data = data["k"]
         if event_time >= candle_data["T"]:
@@ -158,6 +158,7 @@ class Binance(ExchangeBase):
                 trade_count=int(candle_data["n"])
             )
             self.logger.info(candle)
+            self.candle_callback(candle)
 
     def _on_error_(self, error):
         self.logger.info(error)
@@ -171,7 +172,7 @@ class Binance(ExchangeBase):
     # GENERIC METHODS #
     def interval_to_granularity(self, interval: Interval) -> object:
         match interval:
-            case Interval.ONE_MINUTES:
+            case Interval.ONE_MINUTE:
                 return "1m"
             case Interval.FIVE_MINUTES:
                 return "5m"
