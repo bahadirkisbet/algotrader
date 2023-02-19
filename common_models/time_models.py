@@ -10,7 +10,7 @@ class Interval(IntEnum):
             - "1h" -> 3600
             - "1d" -> 86400
     """
-    ONE_MINUTES = 1
+    ONE_MINUTE = 1
     FIVE_MINUTES = 5
     FIFTEEN_MINUTES = 15
     THIRTY_MINUTES = 30
