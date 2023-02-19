@@ -4,6 +4,7 @@ class Candle:
         A class to represent a candlestick.
     """
     def __init__(self,
+                 symbol: str,
                  timestamp: int,
                  open: float,
                  high: float,
@@ -11,6 +12,7 @@ class Candle:
                  close: float,
                  volume: float,
                  trade_count: int):
+        self.symbol = symbol
         self.timestamp = timestamp
         self.open = open
         self.high = high
@@ -20,7 +22,8 @@ class Candle:
         self.trade_count = trade_count
 
     def __str__(self):
-        return f"{self.timestamp} - " \
+        return f"{self.symbol} - "\
+               f"{self.timestamp} - " \
                f"{self.open} - " \
                f"{self.high} - " \
                f"{self.low} - " \
@@ -30,4 +33,3 @@ class Candle:
 
     def get_json(self):
         return vars(self)
-
