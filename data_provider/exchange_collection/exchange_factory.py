@@ -1,6 +1,6 @@
 from common_models.exchange_type import ExchangeType
 from data_provider.exchange_collection.exchange_base import *
-from data_provider.exchange_collection.exchange_library.binance_spot import BinanceSpot
+from data_provider.exchange_collection.exchange_library.binance_spot import Binance
 
 
 class ExchangeFactory:
@@ -19,7 +19,7 @@ class ExchangeFactory:
     def __create_spot__(exchange_name) -> ExchangeBase:
         match exchange_name:
             case "BNB":
-                return BinanceSpot()
+                return Binance()
             case _:
                 raise Exception("Unknown exchange")
 
