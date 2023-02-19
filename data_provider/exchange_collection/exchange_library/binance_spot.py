@@ -11,7 +11,7 @@ from data_provider.exchange_collection.exchange_base import *
 from threading import Semaphore
 
 
-class BinanceSpot(ExchangeBase):
+class Binance(ExchangeBase):
     """
         Binance is a cryptocurrency exchange.
             - https://www.binance.com/
@@ -19,6 +19,7 @@ class BinanceSpot(ExchangeBase):
 
     def __init__(self):
         super().__init__()
+        self.name = "Binance"
         self.request_lock = Semaphore(50)
         self.exchange_type: ExchangeType = ExchangeType.SPOT
         self.websocket_url: str = "wss://stream.binance.com:9443/ws"
@@ -27,12 +28,6 @@ class BinanceSpot(ExchangeBase):
             "fetch_candle": "/api/v3/klines?symbol={}&interval={}&startTime={}&endTime={}&limit={}",
             "fetch_product_list": "/api/v3/ticker/24hr"
         }
-
-    def get_max_candle_limit(self) -> int:
-        return 1000
-
-    def convert_datetime_to_exchange_timestamp(self, dt: datetime.datetime) -> str:
-        return str(int(dt.timestamp() * 1000))
 
     def fetch_product_list(self, sortingOption: SortingOption = None, limit: int = -1) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
@@ -81,7 +76,8 @@ class BinanceSpot(ExchangeBase):
         with multiprocessing.pool.ThreadPool() as pool:
             response_list = pool.starmap(self.__make_request__, url_list)
             result = [item for response in response_list if response is not None for item in response]
-
+            for candle in result:
+                candle.symbol = symbol
         return result
 
     def __make_request__(self, url):
@@ -95,6 +91,7 @@ class BinanceSpot(ExchangeBase):
         json_data = response.json()
 
         return [Candle(
+            symbol="",
             timestamp=int(item[0]),
             open=float(item[1]),
             high=float(item[2]),
@@ -146,6 +143,21 @@ class BinanceSpot(ExchangeBase):
 
     def _on_message_(self, message):
         self.logger.info(message)
+        data = json.loads(message)
+        event_time = data["E"]
+        candle_data = data["k"]
+        if event_time >= candle_data["T"]:
+            candle = Candle(
+                symbol=data["s"],
+                timestamp=candle_data["t"],
+                open=float(candle_data["o"]),
+                high=float(candle_data["h"]),
+                low=float(candle_data["l"]),
+                close=float(candle_data["c"]),
+                volume=float(candle_data["v"]),
+                trade_count=int(candle_data["n"])
+            )
+            self.logger.info(candle)
 
     def _on_error_(self, error):
         self.logger.info(error)
@@ -156,6 +168,7 @@ class BinanceSpot(ExchangeBase):
     def _on_open_(self):
         self.logger.info("opened")
 
+    # GENERIC METHODS #
     def interval_to_granularity(self, interval: Interval) -> object:
         match interval:
             case Interval.ONE_MINUTES:
@@ -170,3 +183,9 @@ class BinanceSpot(ExchangeBase):
                 return "1d"
             case _:
                 raise Exception("Interval not supported")
+
+    def get_max_candle_limit(self) -> int:
+        return 1000
+
+    def convert_datetime_to_exchange_timestamp(self, dt: datetime.datetime) -> str:
+        return str(int(dt.timestamp() * 1000))
