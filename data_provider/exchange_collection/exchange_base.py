@@ -20,6 +20,7 @@ class ExchangeBase(ABC):
         self.websocket_url: str = "NotSet"
         self.api_url: str = "NotSet"
         self.api_endpoints: dict = {}
+        self.candle_callback: callable = None
 
     @abstractmethod
     def _on_message_(self, message):
@@ -141,3 +142,6 @@ class ExchangeBase(ABC):
             url_list.append([url])
             current_date = next_date
         return url_list
+
+    def register_candle_callback(self, callback):
+        self.candle_callback = callback
