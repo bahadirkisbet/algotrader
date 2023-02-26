@@ -6,7 +6,7 @@ import requests
 
 from common_models.data_models.candle import Candle
 from common_models.exchange_type import ExchangeType
-from utils.websocket_manager.websocket_manager import WebsocketManager
+from managers.websocket_manager import WebsocketManager
 from data_provider.exchange_collection.exchange_base import *
 from threading import Semaphore
 
@@ -105,7 +105,6 @@ class Binance(ExchangeBase):
 
     def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
         assert self.websocket_url is not None, "websocket_url not defined"
-        print(self.websocket_url)
         websocket_name = WebsocketManager.create_websocket_connection(
             address=self.websocket_url,
             port=None,
@@ -140,6 +139,7 @@ class Binance(ExchangeBase):
         socket_name = self.__symbol_to_ws__[symbol]
         socket = WebsocketManager.WebsocketDict[socket_name]
         socket.send(self.__prepare_unsubscribe_message__(symbol, interval))
+        WebsocketManager.end_connection(socket_name)
 
     def _on_message_(self, message):
         print(message) # to avoid actual logging, we may print this, but it will be printed in the console
@@ -164,7 +164,7 @@ class Binance(ExchangeBase):
         self.logger.info(error)
 
     def _on_close_(self, close_status_code, close_msg):
-        self.logger.info(close_status_code, close_msg)
+        self.logger.info("Socket closed")
 
     def _on_open_(self):
         self.logger.info("opened")
