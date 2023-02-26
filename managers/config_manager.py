@@ -2,7 +2,7 @@ from utils.singleton_metaclass.singleton import Singleton
 import configparser
 
 
-class ConfigManager:
+class ConfigManager(Singleton):
     __config__: configparser.ConfigParser = None
 
     @staticmethod

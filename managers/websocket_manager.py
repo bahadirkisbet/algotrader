@@ -76,5 +76,10 @@ class WebsocketManager(ABC):
 
     @staticmethod
     def end_connection(name):
-        WebsocketManager.WebsocketDict[name].close()
-        del WebsocketManager.__tasks__[name]
+        if WebsocketManager.WebsocketConnectionCount[name] > 1:
+            WebsocketManager.WebsocketConnectionCount[name] -= 1
+        else:
+            WebsocketManager.WebsocketDict[name].close()
+            WebsocketManager.__tasks__[name].join()
+            WebsocketManager.__socket_lock_dict__[name].release()
+            del WebsocketManager.__tasks__[name]
