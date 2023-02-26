@@ -1,8 +1,11 @@
+import json
+
 
 class Candle:
     """
         A class to represent a candlestick.
     """
+
     def __init__(self,
                  symbol: str,
                  timestamp: int,
@@ -21,8 +24,21 @@ class Candle:
         self.volume = volume
         self.trade_count = trade_count
 
+    @staticmethod
+    def read_json(json_data: dict):
+        return Candle(
+            symbol=json_data["symbol"],
+            timestamp=json_data["timestamp"],
+            open=json_data["open"],
+            high=json_data["high"],
+            low=json_data["low"],
+            close=json_data["close"],
+            volume=json_data["volume"],
+            trade_count=json_data["trade_count"]
+        )
+
     def __str__(self):
-        return f"{self.symbol} - "\
+        return f"{self.symbol} - " \
                f"{self.timestamp} - " \
                f"{self.open} - " \
                f"{self.high} - " \
