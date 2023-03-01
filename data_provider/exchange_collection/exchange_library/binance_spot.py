@@ -1,3 +1,4 @@
+import datetime
 import json
 import multiprocessing
 import multiprocessing.pool
@@ -19,15 +20,16 @@ class Binance(ExchangeBase):
 
     def __init__(self):
         super().__init__()
-        self.name = "Binance"
-        self.request_lock = Semaphore(50)
+        self.name: str = "Binance"
+        self.request_lock: Semaphore = Semaphore(50)
         self.exchange_type: ExchangeType = ExchangeType.SPOT
         self.websocket_url: str = "wss://stream.binance.com:9443/ws"
-        self.api_url = "https://api.binance.com"
+        self.api_url: str = "https://api.binance.com"
         self.api_endpoints: dict = {
             "fetch_candle": "/api/v3/klines?symbol={}&interval={}&startTime={}&endTime={}&limit={}",
             "fetch_product_list": "/api/v3/ticker/24hr"
         }
+        self.first_data_date = datetime.datetime(2017, 8, 14, 0, 0, 0, 0)
 
     def fetch_product_list(self, sortingOption: SortingOption = None, limit: int = -1) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
@@ -142,7 +144,7 @@ class Binance(ExchangeBase):
         WebsocketManager.end_connection(socket_name)
 
     def _on_message_(self, message):
-        print(message) # to avoid actual logging, we may print this, but it will be printed in the console
+        print(message)  # to avoid actual logging, we may print this, but it will be printed in the console
         data = message
         event_time = data["E"]
         candle_data = data["k"]
