@@ -21,6 +21,7 @@ class ExchangeBase(ABC):
         self.api_url: str = "NotSet"
         self.api_endpoints: dict = {}
         self.candle_callback: callable = None
+        self.first_data_date: datetime.datetime = datetime.datetime(2020, 1, 1, 0, 0, 0)
 
     @abstractmethod
     def _on_message_(self, message):
