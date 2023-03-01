@@ -47,18 +47,21 @@ class ExchangeBase(ABC):
         pass
 
     @abstractmethod
-    def fetch_candle(self, symbol: str, startDate: datetime.datetime, endDate: datetime.datetime,
+    def fetch_candle(self,
+                     symbol: str,
+                     startDate: datetime.datetime,
+                     endDate: datetime.datetime,
                      interval: Interval) -> list:
         """
             Fetches candle data from exchange. In general, it is meant to do it concurrently.
             
-            symbol: str -> Symbol of the asset in the corresponding exchange.
+            :param symbol: str -> Symbol of the asset in the corresponding exchange.
                 Example: "BTC/USDT", "ETH/USDT", "LTC/USDT", "BTCUSDT", "ETHUSDT", "LTCUSDT"
-            startDate: datetime -> Start date of the candle data.
+            :param startDate: datetime -> Start date of the candle data.
                 Example: datetime(2020, 1, 1, 0, 0, 0)
-            endDate: datetime -> End date of the candle data.
+            :param endDate: datetime -> End date of the candle data.
                 Example: datetime(2022, 1, 1, 0, 0, 0)
-            interval: str -> Interval of the candle data.
+            :param interval: str -> Interval of the candle data.
                 Example: "1m", "5m", "1h", "1d"
         """
         pass
@@ -68,9 +71,9 @@ class ExchangeBase(ABC):
         """
             Subscribes to websocket to get realtime data.
             
-                - symbol: str -> Symbol of the asset in the corresponding exchange.
+                :param symbols: List[str] -> Symbol of the asset in the corresponding exchange.
                     - Example: "BTC/USDT", "ETH/USDT", "LTC/USDT", "BTCUSDT", "ETHUSDT", "LTCUSDT"
-                - interval: Interval -> Interval of the candle data.
+                :param interval: Interval -> Interval of the candle data.
                     - Example: "1m", "5m", "1h", "1d"
         """
         pass

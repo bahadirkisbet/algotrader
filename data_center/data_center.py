@@ -50,11 +50,10 @@ class DataCenter(metaclass=Singleton):
                  symbol: str,
                  start_date: datetime.datetime,
                  end_date: datetime.datetime,
-                 interval: Interval) -> None:
+                 interval: Interval) -> List[Candle]:
 
         candles = self.exchange.fetch_candle(symbol, start_date, end_date, interval)
-        for candle in candles:
-            self.push_candle(candle)
+        return candles
 
     def run_forever(self):
         while self.__run_forever__:
@@ -70,11 +69,31 @@ class DataCenter(metaclass=Singleton):
         for symbol in self.symbols:
             data = self.symbols[symbol]
             self.exchange.unsubscribe_from_websocket(symbol, self.__time_frame__)
-
             self.archiver.save(self.exchange.name, symbol, self.data_type, str(self.__time_frame__.value), data)
 
     def load_from_archive(self, symbols):
         for symbol in symbols:
             data = self.archiver.read(self.exchange.name, symbol, self.data_type, str(self.__time_frame__.value))
             if len(data) > 0:
-                self.symbols[symbol] = data
+                # sorting might be expensive, but it is necessary to keep the data in order
+                self.check_and_save(data, symbol)
+
+    def check_and_save(self, data, symbol):
+        """
+        This method checks the data and fills the missing data with backfilling
+        :param data: any kind of data read from archive and has a timestamp
+        :param symbol: any valid symbol traded in an exchange
+        :return: nothing
+        """
+        self.symbols[symbol] = []
+        archived_data = sorted(data, key=lambda x: x.timestamp)
+        current_ts = archived_data[0].timestamp
+        for candle in archived_data:
+            if candle.timestamp == current_ts:
+                self.symbols[symbol].append(candle)
+                current_ts += self.__time_frame__.value
+            else:
+                lost_data = self.backfill(symbol, current_ts, candle.timestamp, self.__time_frame__)
+                current_ts = candle.timestamp
+                self.symbols[symbol].extend(lost_data)
+
