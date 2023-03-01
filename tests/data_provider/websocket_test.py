@@ -1,6 +1,6 @@
 import unittest
 
-import utils.websocket_manager.websocket_manager as websocket_manager
+import managers.websocket_manager as websocket_manager
 
 
 class TestWebsocket(unittest.TestCase):
