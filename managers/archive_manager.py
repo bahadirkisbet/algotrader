@@ -37,9 +37,38 @@ class ArchiveManager:
              data_type: str,
              data_frame: str):
         file_name = f"{self.__archive_folder__}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
+
+        if not os.path.exists(file_name):
+            return []
+
         with gzip.open(file_name, "r") as f_in:
             json_str = f_in.read().decode(self.__default_encoding__)
         return [Candle.read_json(json_candle) for json_candle in json.loads(json_str)]
 
     def list(self):
         return [file for file in os.listdir(self.__archive_folder__) if file not in [".", ".."]]
+
+    def get_file_names_filtered(self,
+                                exchange_code: str = None,
+                                symbol: str = None,
+                                data_type: str = None,
+                                data_frame: str = None):
+        file_names = self.list()
+        if exchange_code is not None:
+            file_names = [file for file in file_names if file.startswith(f"{exchange_code}_")]
+
+        if symbol is not None:
+            file_names = [file for file in file_names if file.split("_")[2] == symbol]
+
+        if data_type is not None:
+            file_names = [file for file in file_names if file.split("_")[1] == data_type]
+
+        if data_frame is not None: # there could be several type of file format
+            file_names = [file for file in file_names if file.split("_")[3].startswith(data_frame)]
+
+        return file_names
+
+    def read_file(self, file_name):
+        with gzip.open(file_name, "r") as f_in:
+            json_str = f_in.read().decode(self.__default_encoding__)
+        return [Candle.read_json(json_candle) for json_candle in json.loads(json_str)]
