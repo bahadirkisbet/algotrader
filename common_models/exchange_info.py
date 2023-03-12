@@ -1,5 +1,7 @@
+import datetime
+
 
 class ExchangeInfo:
-    def __init__(self, name, first_data_datetime):
-        self.name = name
-        self.first_data_datetime = first_data_datetime
+    def __init__(self, name: str, first_data_datetime: datetime.datetime):
+        self.name: str = name
+        self.first_data_datetime: datetime.datetime = first_data_datetime

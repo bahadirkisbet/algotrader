@@ -5,7 +5,7 @@ from typing import Optional
 
 from common_models.exchange_info import ExchangeInfo
 from common_models.time_models import Interval
-from exchange import Exchange
+from data_provider.exchange_collection.exchange import Exchange
 from abc import ABC, abstractmethod
 
 from managers.service_manager import ServiceManager
@@ -77,11 +77,11 @@ class ExchangeBase(Exchange, ABC):
                           endDate: datetime.datetime,
                           interval: Interval,
                           symbol: str):
-        assert "fetch_candle" in self.api_endpoints, "fetch_candle endpoint is not defined in api_endpoints"
-        assert self.interval_to_granularity(interval) is not None, "interval_to_granularity is not implemented"
-        assert self.get_max_candle_limit() is not None, "get_max_candle_limit is not implemented"
+        assert "fetch_candle" in self.api_endpoints, "`fetch_candle` endpoint is not defined in api_endpoints"
+        assert self.interval_to_granularity(interval) is not None, "`interval_to_granularity` is not implemented"
+        assert self.get_max_candle_limit() is not None, "`get_max_candle_limit` is not implemented"
         assert self.convert_datetime_to_exchange_timestamp(
-            startDate) is not None, "convert_datetime_to_exchange_timestamp is not implemented"
+            startDate) is not None, "`convert_datetime_to_exchange_timestamp` is not implemented"
 
         url_list = []
         current_date = startDate

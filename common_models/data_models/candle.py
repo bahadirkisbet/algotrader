@@ -47,5 +47,9 @@ class Candle:
                f"{self.volume} - " \
                f"{self.trade_count}"
 
-    def get_json(self):
+    def get_json(self) -> dict:
         return vars(self)
+
+    @staticmethod
+    def get_fields():
+        return ["symbol", "timestamp", "open", "high", "low", "close", "volume", "trade_count"]

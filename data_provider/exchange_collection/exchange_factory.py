@@ -7,7 +7,7 @@ class ExchangeFactory:
     @staticmethod
     def create(
             exchange_name: str,
-            exchange_type: ExchangeType) -> ExchangeBase:
+            exchange_type: ExchangeType) -> Exchange:
 
         match exchange_type:
             case ExchangeType.SPOT:
@@ -16,7 +16,7 @@ class ExchangeFactory:
                 raise Exception("Unknown exchange type")
 
     @staticmethod
-    def __create_spot__(exchange_name) -> ExchangeBase:
+    def __create_spot__(exchange_name) -> Exchange:
         match exchange_name:
             case "BNB":
                 return Binance()

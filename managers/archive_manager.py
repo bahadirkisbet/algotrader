@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import gzip
+from typing import List
 
 from common_models.data_models.candle import Candle
 
@@ -25,10 +26,14 @@ class ArchiveManager:
              symbol: str,
              data_type: str,
              data_frame: str,
-             data: list):
+             data: List[Candle]):
 
         file_name = f"{self.__archive_folder__}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
-        json_str = json.dumps([candle.get_json() for candle in data]).encode(self.__default_encoding__)
+        json_dict = {
+            "fields": Candle.get_fields(),
+            "data": [candle.get_json().values() for candle in data]
+        }
+        json_str = json.dumps(json_dict).encode(self.__default_encoding__)
         with gzip.open(file_name, "w") as out:
             out.write(json_str)
 
@@ -43,7 +48,7 @@ class ArchiveManager:
 
         with gzip.open(file_name, "r") as f_in:
             json_str = f_in.read().decode(self.__default_encoding__)
-        return [Candle.read_json(json_candle) for json_candle in json.loads(json_str)]
+        return [Candle(*json_candle) for json_candle in json.loads(json_str)["data"]]
 
     def list(self):
         return [file for file in os.listdir(self.__archive_folder__) if file not in [".", ".."]]

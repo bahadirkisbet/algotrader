@@ -11,14 +11,21 @@
 
 #### Refactoring
 - [X] Separate exchange specific methods into the abstract class and leave base class as an interface (with correct naming)
-- [ ] Move all initialization process to a method from constructor
+- [ ] Move all initialization process to a method from constructor NOTE: DON'T DO THIS, IT'S NOT A GOOD PRACTICE
 
 #### Feature
 - [X] Add scan on historical values and retrieve missing ranges
-- [ ] Backfill those ranges
+- [X] Backfill those ranges
 - [ ] Create correct program flow
 - [ ] Implement decision maker algorithm
   - [ ] There could be several models, which are many. Implement those
+    - [ ] Decision Maker
+      - [ ] There should be at least 5 models
+        - [ ] ARIMA
+        - [ ] LSTM
+        - [ ] GPR
+        - [ ] Random Forest
+        - [ ] XGBoost
   - [ ] Create scoring mechanism
   - [ ] Create scoring feedback mechanism by the success rates of the trades
 - [ ] Create or use a library for binance client
@@ -26,12 +33,27 @@
   - [ ] Implement mock tester
 - [ ] Implement archiving mechanism
 - [ ] Implement technical indicators
-  - [ ] There should be at least 5 indicators
-    - [ ] SMA
-    - [ ] EMA
-    - [ ] RSI
-    - [ ] VWAP
-    - [ ] MACD
+  - [ ] Implement Jobs mechanism
+    - [ ] Technical Indicators
+        - [ ] There should be at least 5 indicators
+          - [ ] SMA
+          - [ ] EMA
+          - [ ] RSI
+          - [ ] VWAP
+          - [ ] MACD
+    - [ ] Create Dependency mechanism - The point is to avoid calculating the same thing twice
+      - [ ] Technical Indicators
+        - [ ] SMA
+          - [ ] Depends on: Close
+        - [ ] EMA
+          - [ ] Depends on: Close
+        - [ ] RSI
+          - [ ] Depends on: Close
+        - [ ] VWAP
+          - [ ] Depends on: Close, Volume
+        - [ ] MACD
+          - [ ] Depends on: Close
+          - [ ] Depends on: EMA
   - [ ] Search for any other method that can be useful for prediction of price
   - [ ] Design an UI
     - [ ] Profit and loss analysis
@@ -40,6 +62,9 @@
     - [ ] Custom buy/sell orders over the current position
     - [ ] Custom buy/sell orders over the current price
     - [ ] Login Page (possibly keycloak)
+    
+#### Bug
+- [ ] It should make roughly 2900 calls for btcusdt when it's backfilling, but it makes 5900 calls. Find the reason and fix it
 
 
 ### OpenAI Suggestions

@@ -1,12 +1,13 @@
-import datetime
 import json
 import multiprocessing
 import multiprocessing.pool
+from typing import List
 
 import requests
 
 from common_models.data_models.candle import Candle
 from common_models.exchange_type import ExchangeType
+from common_models.sorting_option import SortingOption, SortBy
 from managers.websocket_manager import WebsocketManager
 from data_provider.exchange_collection.exchange_base import *
 from threading import Semaphore
@@ -21,7 +22,7 @@ class Binance(ExchangeBase):
     def __init__(self):
         super().__init__()
         self.name: str = "Binance"
-        self.request_lock: Semaphore = Semaphore(50)
+        self.request_lock: Semaphore = Semaphore(100)
         self.exchange_type: ExchangeType = ExchangeType.SPOT
         self.websocket_url: str = "wss://stream.binance.com:9443/ws"
         self.api_url: str = "https://api.binance.com"
@@ -83,7 +84,7 @@ class Binance(ExchangeBase):
         return result
 
     def __make_request__(self, url):
-        self.logger.info(f"Fetching candle data from {url} at {self.request_lock}")
+        self.logger.info(f"Fetching candle data from {url} with the semaphore value {self.request_lock._value}")
         self.request_lock.acquire()  # lock
         response = requests.get(url)
         self.request_lock.release()  # unlock
