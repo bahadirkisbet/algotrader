@@ -12,7 +12,10 @@ class ServiceManager:
 
     @staticmethod
     def get_service(name):
-        return ServiceManager.__services__[name]
+        try:
+            return ServiceManager.__services__[name]
+        except KeyError:
+            raise KeyError(f"Service {name} is not initialized yet.")
 
     @staticmethod
     def initialize_logger():
