@@ -31,7 +31,7 @@ class ArchiveManager:
         file_name = f"{self.__archive_folder__}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
         json_dict = {
             "fields": Candle.get_fields(),
-            "data": [candle.get_json().values() for candle in data]
+            "data": [list(candle.get_json().values()) for candle in data]
         }
         json_str = json.dumps(json_dict).encode(self.__default_encoding__)
         with gzip.open(file_name, "w") as out:
