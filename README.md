@@ -16,7 +16,8 @@
 #### Feature
 - [X] Add scan on historical values and retrieve missing ranges
 - [X] Backfill those ranges
-- [ ] Create correct program flow
+- [X] Create correct program flow
+  - [ ] It is partly done. 
 - [ ] Implement decision maker algorithm
   - [ ] There could be several models, which are many. Implement those
     - [ ] Decision Maker
@@ -30,8 +31,8 @@
   - [ ] Create scoring feedback mechanism by the success rates of the trades
 - [ ] Create or use a library for binance client
   - [ ] Wrap this library to provide more functionality
-  - [ ] Implement mock tester
-- [ ] Implement archiving mechanism
+- [ ] Implement mock tester - ! Important ! {This is going to be backtester} 
+- [X] Implement archiving mechanism
 - [ ] Implement technical indicators
   - [ ] Implement Jobs mechanism
     - [ ] Technical Indicators
@@ -64,7 +65,7 @@
     - [ ] Login Page (possibly keycloak)
     
 #### Bug
-- [ ] It should make roughly 2900 calls for btcusdt when it's backfilling, but it makes 5900 calls. Find the reason and fix it
+- [ ] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
 
 
 ### OpenAI Suggestions
