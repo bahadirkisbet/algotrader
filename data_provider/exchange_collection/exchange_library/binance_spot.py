@@ -1,6 +1,7 @@
 import json
 import multiprocessing
 import multiprocessing.pool
+from threading import Semaphore
 from typing import List
 
 import requests
@@ -8,9 +9,7 @@ import requests
 from common_models.data_models.candle import Candle
 from common_models.exchange_type import ExchangeType
 from common_models.sorting_option import SortingOption, SortBy
-from managers.websocket_manager import WebsocketManager
 from data_provider.exchange_collection.exchange_base import *
-from threading import Semaphore
 
 
 class Binance(ExchangeBase):
@@ -32,7 +31,7 @@ class Binance(ExchangeBase):
         }
         self.first_data_date = datetime.datetime(2017, 8, 14, 0, 0, 0, 0)
 
-    def fetch_product_list(self, sortingOption: SortingOption = None, limit: int = -1) -> List[str]:
+    def fetch_product_list(self, sorting_option: SortingOption = None, limit: int = -1) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
 
         if self.__development_mode__:
@@ -45,8 +44,8 @@ class Binance(ExchangeBase):
         # first filter by status == TRADING then select only the symbol
         data = response.json()
 
-        if sortingOption is not None:
-            data = self.__apply_sorting_options__(data, sortingOption)
+        if sorting_option is not None:
+            data = self.__apply_sorting_options__(data, sorting_option)
 
         if limit > 0:
             data = data[:limit]
@@ -54,27 +53,28 @@ class Binance(ExchangeBase):
         return [product["symbol"] for product in data]
 
     @staticmethod
-    def __apply_sorting_options__(data, sortingOption):
-        match sortingOption.sort_by:
+    def __apply_sorting_options__(data: list, sorting_option: SortingOption):
+        is_reverse = sorting_option.sort_order.value
+        match sorting_option.sort_by:
             case SortBy.SYMBOL:
-                data = sorted(data, key=lambda x: x["symbol"], reverse=sortingOption.sort_order.value)
+                data = sorted(data, key=lambda x: x["symbol"], reverse=is_reverse)
             case SortBy.PRICE:
-                data = sorted(data, key=lambda x: x["lastPrice"], reverse=sortingOption.sort_order.value)
+                data = sorted(data, key=lambda x: x["lastPrice"], reverse=is_reverse)
             case SortBy.VOLUME:
-                data = sorted(data, key=lambda x: x["volume"], reverse=sortingOption.sort_order.value)
+                data = sorted(data, key=lambda x: x["volume"], reverse=is_reverse)
             case SortBy.CHANGE:
-                data = sorted(data, key=lambda x: x["priceChange"], reverse=sortingOption.sort_order.value)
+                data = sorted(data, key=lambda x: x["priceChange"], reverse=is_reverse)
             case SortBy.CHANGE_PERCENT:
-                data = sorted(data, key=lambda x: x["priceChangePercent"], reverse=sortingOption.sort_order.value)
+                data = sorted(data, key=lambda x: x["priceChangePercent"], reverse=is_reverse)
             case _:
                 pass
         return data
 
-    def fetch_candle(self, symbol: str, startDate: datetime, endDate: datetime, interval: Interval) -> List[Candle]:
+    def fetch_candle(self, symbol: str, start_date: datetime, end_date: datetime, interval: Interval) -> List[Candle]:
         assert "fetch_candle" in self.api_endpoints, "fetch_candle endpoint not defined"
         assert self.api_url is not None, "api_url not defined"
 
-        url_list = self._create_url_list_(startDate, endDate, interval, symbol)
+        url_list = self._create_url_list_(start_date, end_date, interval, symbol)
 
         with multiprocessing.pool.ThreadPool() as pool:
             response_list = pool.starmap(self.__make_request__, url_list)
@@ -106,24 +106,6 @@ class Binance(ExchangeBase):
 
     # SOCKET RELATED METHODS #
 
-    def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
-        assert self.websocket_url is not None, "websocket_url not defined"
-        websocket_name = WebsocketManager.create_websocket_connection(
-            address=self.websocket_url,
-            port=None,
-            on_message=self._on_message_,
-            on_error=self._on_error_,
-            on_close=self._on_close_,
-            on_open=self._on_open_)
-        WebsocketManager.start_connection(websocket_name)
-        socket = WebsocketManager.WebsocketDict[websocket_name]
-
-        self.logger.info(f"Subscribing to {symbols} at {websocket_name}")
-        for symbol in symbols:
-            self.__symbol_to_ws__[symbol] = websocket_name
-            socket.send(self.__prepare_subscribe_message__(symbol, interval))
-            self.logger.info(f"Subscribed to {symbol} at {websocket_name}")
-
     def __prepare_subscribe_message__(self, symbol: str, interval: Interval) -> str:
         return json.dumps({
             "method": "SUBSCRIBE",
@@ -137,12 +119,6 @@ class Binance(ExchangeBase):
             "params": [f"{symbol.lower()}@kline_{self.interval_to_granularity(interval)}"],
             "id": 1
         })
-
-    def unsubscribe_from_websocket(self, symbol: str, interval: Interval) -> None:
-        socket_name = self.__symbol_to_ws__[symbol]
-        socket = WebsocketManager.WebsocketDict[socket_name]
-        socket.send(self.__prepare_unsubscribe_message__(symbol, interval))
-        WebsocketManager.end_connection(socket_name)
 
     def _on_message_(self, message):
         print(message)  # to avoid actual logging, we may print this, but it will be printed in the console
@@ -162,15 +138,6 @@ class Binance(ExchangeBase):
             )
             self.logger.info(candle)
             self.candle_callback(candle)
-
-    def _on_error_(self, error):
-        self.logger.info(error)
-
-    def _on_close_(self, close_status_code, close_msg):
-        self.logger.info("Socket closed")
-
-    def _on_open_(self):
-        self.logger.info("opened")
 
     # GENERIC METHODS #
     def interval_to_granularity(self, interval: Interval) -> object:

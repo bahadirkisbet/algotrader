@@ -118,10 +118,11 @@ class DataCenter(metaclass=Singleton):
 
         index = 0
         total_length = len(archived_data)
+
         while current_datetime < end_datetime and index < total_length:
             candle = archived_data[index]
             current_ts = int(current_datetime.timestamp() * 1000)
-            self.logger.info(f"current_ts: {current_ts} candle.timestamp: {candle.timestamp}")
+
             if candle.timestamp == current_ts:
                 self.symbols[symbol].append(candle)
                 current_datetime += datetime.timedelta(minutes=self.__time_frame__.value)

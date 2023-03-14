@@ -9,6 +9,7 @@ from data_provider.exchange_collection.exchange import Exchange
 from abc import ABC, abstractmethod
 
 from managers.service_manager import ServiceManager
+from managers.websocket_manager import WebsocketManager
 
 
 class ExchangeBase(Exchange, ABC):
@@ -29,17 +30,14 @@ class ExchangeBase(Exchange, ABC):
     def _on_message_(self, message):
         pass
 
-    @abstractmethod
     def _on_error_(self, error):
-        pass
+        self.logger.info(error)
 
-    @abstractmethod
     def _on_close_(self, close_status_code, close_msg):
-        pass
+        self.logger.info("Socket closed")
 
-    @abstractmethod
     def _on_open_(self):
-        pass
+        self.logger.info("opened")
 
     @abstractmethod
     def interval_to_granularity(self, interval: Interval) -> str:
@@ -56,6 +54,30 @@ class ExchangeBase(Exchange, ABC):
 
         """
         pass
+
+    def subscribe_to_websocket(self, symbols: List[str], interval: Interval) -> None:
+        assert self.websocket_url is not None, "websocket_url not defined"
+        websocket_name = WebsocketManager.create_websocket_connection(
+            address=self.websocket_url,
+            port=None,
+            on_message=self._on_message_,
+            on_error=self._on_error_,
+            on_close=self._on_close_,
+            on_open=self._on_open_)
+        WebsocketManager.start_connection(websocket_name)
+        socket = WebsocketManager.WebsocketDict[websocket_name]
+
+        self.logger.info(f"Subscribing to {symbols} at {websocket_name}")
+        for symbol in symbols:
+            self.__symbol_to_ws__[symbol] = websocket_name
+            socket.send(self.__prepare_subscribe_message__(symbol, interval))
+            self.logger.info(f"Subscribed to {symbol} at {websocket_name}")
+
+    def unsubscribe_from_websocket(self, symbol: str, interval: Interval) -> None:
+        socket_name = self.__symbol_to_ws__[symbol]
+        socket = WebsocketManager.WebsocketDict[socket_name]
+        socket.send(self.__prepare_unsubscribe_message__(symbol, interval))
+        WebsocketManager.end_connection(socket_name)
 
     @abstractmethod
     def get_max_candle_limit(self) -> int:
@@ -111,3 +133,11 @@ class ExchangeBase(Exchange, ABC):
                 self.name,
                 self.first_data_date)
         return self.exchange_info
+
+    @abstractmethod
+    def __prepare_subscribe_message__(self, symbol, interval):
+        pass
+
+    @abstractmethod
+    def __prepare_unsubscribe_message__(self, symbol, interval):
+        pass
