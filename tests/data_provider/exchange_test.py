@@ -1,7 +1,8 @@
 import datetime
 import unittest
 
-from data_provider.exchange_collection.exchange_factory import ExchangeType, ExchangeFactory, ExchangeBase, Interval
+from data_provider.exchange_collection.exchange_factory import ExchangeType, ExchangeFactory, Exchange, Interval
+from managers.service_manager import ServiceManager
 
 
 class TestExchangeBase(unittest.TestCase):
@@ -10,30 +11,26 @@ class TestExchangeBase(unittest.TestCase):
 
     @staticmethod
     def prepare_config_and_logger():
-        config = configparser.ConfigParser()
+        ServiceManager.initialize_config()
+        ServiceManager.initialize_logger()
+        config = ServiceManager.get_service("config")
         config.read("../../config.ini")
-        logger = logger_setup(config)
+        logger = ServiceManager.get_service("logger")
         return config, logger
 
     def test_product_list(self):
-        config, logger = self.prepare_config_and_logger()
-        exchange: ExchangeBase = ExchangeFactory.create(
+        exchange: Exchange = ExchangeFactory.create(
             TestExchangeBase.exchange_code,
-            TestExchangeBase.exchange_type,
-            config,
-            logger)
+            TestExchangeBase.exchange_type)
 
         product_list = exchange.fetch_product_list()
         self.assertIsNotNone(product_list, "Product list is empty")
         self.assertEqual(type(product_list), dict, "Product list is not a dict")
 
     def test_candle(self):
-        config, logger = self.prepare_config_and_logger()
-        exchange: ExchangeBase = ExchangeFactory.create(
+        exchange: Exchange = ExchangeFactory.create(
             TestExchangeBase.exchange_code,
-            TestExchangeBase.exchange_type,
-            config,
-            logger)
+            TestExchangeBase.exchange_type)
         symbol = "BTCUSDT"
         start_date = datetime.datetime(2021, 1, 1)
         end_date = datetime.datetime(2022, 1, 1)

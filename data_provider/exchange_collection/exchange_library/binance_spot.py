@@ -2,7 +2,6 @@ import json
 import multiprocessing
 import multiprocessing.pool
 from threading import Semaphore
-from typing import List
 
 import requests
 
@@ -21,7 +20,7 @@ class Binance(ExchangeBase):
     def __init__(self):
         super().__init__()
         self.name: str = "Binance"
-        self.request_lock: Semaphore = Semaphore(100)
+        self.request_lock: Semaphore = Semaphore(50)
         self.exchange_type: ExchangeType = ExchangeType.SPOT
         self.websocket_url: str = "wss://stream.binance.com:9443/ws"
         self.api_url: str = "https://api.binance.com"
@@ -84,7 +83,7 @@ class Binance(ExchangeBase):
         return result
 
     def __make_request__(self, url):
-        self.logger.info(f"Fetching candle data from {url} with the semaphore value {self.request_lock._value}")
+        self.logger.info(f"Fetching candle data from {url}")
         self.request_lock.acquire()  # lock
         response = requests.get(url)
         self.request_lock.release()  # unlock

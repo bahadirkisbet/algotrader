@@ -68,7 +68,7 @@ class ArchiveManager:
         if data_type is not None:
             file_names = [file for file in file_names if file.split("_")[1] == data_type]
 
-        if data_frame is not None: # there could be several type of file format
+        if data_frame is not None:  # there could be several type of file format
             file_names = [file for file in file_names if file.split("_")[3].startswith(data_frame)]
 
         return file_names

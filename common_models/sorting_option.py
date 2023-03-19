@@ -28,5 +28,5 @@ class SortingOption:
 
 if __name__ == "__main__":
     sortOrder = SortOrder.DESCENDING
-    l = [5, 10, 1, 3, 2]
-    print(sorted(l, reverse=sortOrder.value))
+    my_list = [5, 10, 1, 3, 2]
+    print(sorted(my_list, reverse=sortOrder.value))

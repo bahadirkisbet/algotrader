@@ -83,3 +83,12 @@ class WebsocketManager(ABC):
             WebsocketManager.__tasks__[name].join()
             WebsocketManager.__socket_lock_dict__[name].release()
             del WebsocketManager.__tasks__[name]
+
+    @classmethod
+    def close(cls):
+        print("WebsocketManager close")
+        for name in cls.WebsocketDict:
+            cls.WebsocketDict[name].close()
+            cls.__tasks__[name].join()
+            cls.__socket_lock_dict__[name].release()
+            del cls.__tasks__[name]

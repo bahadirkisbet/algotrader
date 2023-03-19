@@ -1,7 +1,7 @@
 import configparser
 import datetime
 import logging
-from typing import Optional
+from typing import Optional, List
 
 from common_models.exchange_info import ExchangeInfo
 from common_models.time_models import Interval
@@ -33,8 +33,9 @@ class ExchangeBase(Exchange, ABC):
     def _on_error_(self, error):
         self.logger.info(error)
 
+    # noinspection PyUnusedLocal
     def _on_close_(self, close_status_code, close_msg):
-        self.logger.info("Socket closed")
+        self.logger.info("Socket closed with the following message: " + close_msg)
 
     def _on_open_(self):
         self.logger.info("opened")

@@ -15,5 +15,6 @@ if __name__ == "__main__":
 
     dataCenter = DataCenter()
     dataCenter.start()
-    time.sleep(60)
+    input("Press any key to exit")
+    print("Exiting...")
     dataCenter.close()

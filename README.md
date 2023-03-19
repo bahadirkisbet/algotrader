@@ -63,9 +63,16 @@
     - [ ] Custom buy/sell orders over the current position
     - [ ] Custom buy/sell orders over the current price
     - [ ] Login Page (possibly keycloak)
+  - [ ] Design REST API backend
+    - [ ] Profit and loss statistics
+    - [ ] Current price, graph, indicators and position
+    - [ ] History of trades
+    - [ ] Custom buy/sell orders over the current position
+    - [ ] Custom buy/sell orders over the current price
+    - [ ] Websocket
     
 #### Bug
-- [ ] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
+- [X] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
 
 
 ### OpenAI Suggestions
@@ -75,8 +82,8 @@ Sure, here are some commonly used models in finance and stock trading:
 1. Autoregressive Integrated Moving Average (ARIMA): This is a statistical model that uses time series data to make predictions. It has been widely used in finance for predicting stock prices, exchange rates, and other economic indicators. ARIMA models are good for predicting trends and patterns in data over time, but may struggle with sudden changes in data or noisy data.
 2. Long Short-Term Memory (LSTM): This is a type of Recurrent Neural Network (RNN) that is good for modeling sequences of data. LSTMs can learn long-term dependencies in time series data and can be used for stock price prediction, portfolio optimization, and risk management. However, LSTMs may require a lot of data and computational resources to train.
 3. Gaussian Process Regression (GPR): This is a non-parametric model that can be used for time series prediction, volatility modeling, and option pricing. GPR models can capture complex patterns in data and can be more flexible than parametric models like ARIMA. However, they may also be computationally expensive and may require careful tuning of hyperparameters.
-4. Random Forests: This is a popular machine learning algorithm that can be used for stock price prediction and portfolio optimization. Random forests are good at handling noisy data and can capture non-linear relationships between features and target variables. However, they may struggle with overfitting if the model is too complex.
-5. XGBoost: This is a gradient boosting algorithm that is widely used in finance and stock trading. It is known for its accuracy and speed, and has been used for portfolio optimization, risk management, and fraud detection. XGBoost models can handle missing data and can capture complex patterns in data, but may require careful tuning of hyperparameters and regularization to avoid overfitting.
+4. Random Forests: This is a popular machine learning algorithm that can be used for stock price prediction and portfolio optimization. Random forests are good at handling noisy data and can capture non-linear relationships between features and target variables. However, they may struggle with over fitting if the model is too complex.
+5. XGBoost: This is a gradient boosting algorithm that is widely used in finance and stock trading. It is known for its accuracy and speed, and has been used for portfolio optimization, risk management, and fraud detection. XGBoost models can handle missing data and can capture complex patterns in data, but may require careful tuning of hyperparameters and regularization to avoid over fitting.
 
 It's important to note that these models should be used as tools to aid decision-making, and not as a substitute for expert knowledge and judgment. Financial markets can be unpredictable and subject to sudden changes, so it's important to carefully evaluate the risks and limitations of any model before using it for trading decisions.
 
