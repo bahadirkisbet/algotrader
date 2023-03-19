@@ -10,7 +10,6 @@ from startup import ServiceManager
 from utils.singleton_metaclass.singleton import Singleton
 from common_models.time_models import Interval
 from queue import Queue
-from multiprocessing import Lock
 from threading import Thread
 
 
@@ -27,7 +26,6 @@ class DataCenter(metaclass=Singleton):
         self.__time_frame__: Interval = Interval.ONE_MINUTE  # TODO: Get from config file
 
         self.symbols: Dict[str, List[Candle]] = {}
-        self.application_lock: Lock = Lock()
         self.__buffer__: Queue[Candle] = Queue()
 
         # register callbacks
@@ -137,3 +135,13 @@ class DataCenter(metaclass=Singleton):
             lost_data = self.backfill(symbol, current_datetime, end_datetime, self.__time_frame__)
             self.symbols[symbol].extend(lost_data)
 
+    def request_candle(self, symbol: str, index_offset: int = 0) -> Optional[Candle]:
+        if symbol not in self.symbols:
+            return None
+        data = self.symbols[symbol]
+        if len(data) == 0:
+            return None
+        index = len(data) - 1 - index_offset
+        if index < 0:
+            return None
+        return data[index]
