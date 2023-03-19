@@ -73,7 +73,7 @@
     
 #### Bug
 - [X] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
-
+- [ ] The program does not terminate. Find the bug and solve it. It is probably related to the one of the threads.
 
 ### OpenAI Suggestions
 
