@@ -37,24 +37,11 @@
   - [ ] Implement Jobs mechanism
     - [ ] Technical Indicators
         - [ ] There should be at least 5 indicators
-          - [ ] SMA
-          - [ ] EMA
+          - [X] SMA
+          - [X] EMA
           - [ ] RSI
           - [ ] VWAP
           - [ ] MACD
-    - [ ] Create Dependency mechanism - The point is to avoid calculating the same thing twice
-      - [ ] Technical Indicators
-        - [ ] SMA
-          - [ ] Depends on: Close
-        - [ ] EMA
-          - [ ] Depends on: Close
-        - [ ] RSI
-          - [ ] Depends on: Close
-        - [ ] VWAP
-          - [ ] Depends on: Close, Volume
-        - [ ] MACD
-          - [ ] Depends on: Close
-          - [ ] Depends on: EMA
   - [ ] Search for any other method that can be useful for prediction of price
   - [ ] Design an UI
     - [ ] Profit and loss analysis
@@ -74,6 +61,8 @@
 #### Bug
 - [X] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
 - [X] The program does not terminate. Find the bug and solve it. It is probably related to the one of the threads.
+- [ ] There is a back-filling from future to past. Find the reason and fix it
+  - `Back-filling BTCUSDT from 2021-09-29 17:49:00 to 2021-09-29 17:48:00 with interval 1...`
 
 ### OpenAI Suggestions
 

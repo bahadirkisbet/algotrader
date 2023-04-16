@@ -8,6 +8,7 @@ from threading import Thread
 
 from common_models.data_models.candle import Candle
 from data_center.jobs.technical_indicator import TechnicalIndicator
+from data_center.jobs.technical_indicators.ema import ExponentialMovingAverage
 from data_center.jobs.technical_indicators.sma import SimpleMovingAverage
 from data_provider.exchange_collection.exchange import Exchange
 from managers.archive_manager import ArchiveManager
@@ -25,7 +26,7 @@ class DataCenter(metaclass=Singleton):
         self.archiver: ArchiveManager = ServiceManager.get_service("archiver")
 
         self.__run_forever__: bool = True
-        self.__backfill__: bool = False
+        self.__backfill__: bool = True
         self.__thread__: Optional[Thread] = None
         self.data_type = "CANDLE"
         self.__time_frame__: Interval = Interval.ONE_MINUTE  # TODO: Get from config file
@@ -134,10 +135,9 @@ class DataCenter(metaclass=Singleton):
             if candle_datetime == current_datetime:  # then we have the data
                 self.symbols[symbol].append(candle)
                 current_datetime += time_diff
-                self.logger.info(f"Found candle timestamp {candle.timestamp}")
             else:  # then we need to backfill
                 self.logger.info(f"Candle timestamp {candle.timestamp}")
-                lost_data = self.backfill(symbol, current_datetime, candle_datetime, self.__time_frame__)
+                lost_data = self.backfill(symbol, current_datetime, candle_datetime - time_diff, self.__time_frame__)
                 self.symbols[symbol].extend(lost_data)
                 current_datetime = candle_datetime + time_diff
             index += 1
@@ -152,17 +152,21 @@ class DataCenter(metaclass=Singleton):
         total_number_of_distinct_candles = len({candle.timestamp for candle in archived_data})
         if total_number_of_candles != total_number_of_distinct_candles:
             self.logger.warning("There are duplicate candles in the archive. This will cause problems in the "
-                                "back-filling")
+                                f"back-filling. The total number of candles {total_number_of_candles} and the "
+                                f"total number of distinct candles {total_number_of_distinct_candles}")
 
     def request_candle(self, symbol: str, index: int = 0, reverse: bool = False) -> Optional[Candle]:
         if symbol not in self.symbols:
             return None
+
         data = self.symbols[symbol]
         if len(data) == 0:
             return None
+
         index = len(data) - 1 - index if reverse else index
         if index < 0:
             return None
+
         return data[index]
 
     def __initialize__(self):
@@ -184,6 +188,10 @@ class DataCenter(metaclass=Singleton):
             sma = SimpleMovingAverage(symbol, self.request_candle)
             self.indicator_codes.append(sma.code)
 
+            # EMA
+            ema = ExponentialMovingAverage(symbol, self.request_candle)
+            self.indicator_codes.append(ema.code)
+
     def __start_calculating_indicators__(self):
         for indicator_code in self.indicator_codes:
             for symbol in self.symbols.keys():
@@ -197,5 +205,5 @@ class DataCenter(metaclass=Singleton):
     def __calculate_candle__(self, candle: Candle):
         for indicator_code in self.indicator_codes:
             indicator: TechnicalIndicator = TechnicalIndicator.get_instance(candle.symbol, indicator_code)
-            value = indicator.calculate(candle)
+            indicator.calculate(candle)
             indicator.print()
