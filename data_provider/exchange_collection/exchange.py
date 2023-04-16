@@ -41,9 +41,9 @@ class Exchange(ABC):
         """
             Subscribes to websocket to get realtime data.
 
-                :param symbols: List[str] -> Symbol of the asset in the corresponding exchange.
+                :param symbols: Symbol of the asset in the corresponding exchange.
                     - Example: "BTC/USDT", "ETH/USDT", "LTC/USDT", "BTCUSDT", "ETHUSDT", "LTCUSDT"
-                :param interval: Interval -> Interval of the candle data.
+                :param interval: Interval of the candle data.
                     - Example: "1m", "5m", "1h", "1d"
         """
         pass

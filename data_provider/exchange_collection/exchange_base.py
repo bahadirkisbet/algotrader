@@ -35,7 +35,7 @@ class ExchangeBase(Exchange, ABC):
 
     # noinspection PyUnusedLocal
     def _on_close_(self, close_status_code, close_msg):
-        self.logger.info("Socket closed with the following message: " + close_msg)
+        self.logger.info(f"Socket closed with the following message: {close_msg} and status code: {close_status_code}")
 
     def _on_open_(self):
         self.logger.info("opened")

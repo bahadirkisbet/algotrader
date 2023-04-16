@@ -11,7 +11,7 @@
 
 #### Refactoring
 - [X] Separate exchange specific methods into the abstract class and leave base class as an interface (with correct naming)
-- [ ] Move all initialization process to a method from constructor NOTE: DON'T DO THIS, IT'S NOT A GOOD PRACTICE
+- [-] Move all initialization process to a method from constructor NOTE: DON'T DO THIS, IT'S NOT A GOOD PRACTICE
 
 #### Feature
 - [X] Add scan on historical values and retrieve missing ranges
@@ -73,7 +73,7 @@
     
 #### Bug
 - [X] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
-- [ ] The program does not terminate. Find the bug and solve it. It is probably related to the one of the threads.
+- [X] The program does not terminate. Find the bug and solve it. It is probably related to the one of the threads.
 
 ### OpenAI Suggestions
 

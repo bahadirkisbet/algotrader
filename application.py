@@ -1,5 +1,3 @@
-import time
-
 from common_models.exchange_type import ExchangeType
 from data_center.data_center import DataCenter
 from data_provider.exchange_collection.exchange_factory import ExchangeFactory

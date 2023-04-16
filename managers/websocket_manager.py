@@ -1,11 +1,14 @@
 import configparser
 import json
+import logging
 import ssl
 import threading
 from abc import ABC
 from typing import Dict, Callable
 from threading import Semaphore
 import websocket
+
+from managers.service_manager import ServiceManager
 
 
 # noinspection PyUnusedLocal
@@ -15,6 +18,11 @@ class WebsocketManager(ABC):
     MaxConnectionLimit: int = 50
     __tasks__: Dict[str, threading.Thread] = {}
     __socket_lock_dict__: Dict[str, Semaphore] = {}
+    __logger__: logging.Logger = None
+
+    @staticmethod
+    def initialize():
+        WebsocketManager.__logger__ = ServiceManager.get_service("logger")
 
     @staticmethod
     def read_config(config: configparser.ConfigParser):
@@ -79,16 +87,19 @@ class WebsocketManager(ABC):
         if WebsocketManager.WebsocketConnectionCount[name] > 1:
             WebsocketManager.WebsocketConnectionCount[name] -= 1
         else:
-            WebsocketManager.WebsocketDict[name].close()
-            WebsocketManager.__tasks__[name].join()
-            WebsocketManager.__socket_lock_dict__[name].release()
-            del WebsocketManager.__tasks__[name]
+            WebsocketManager.__remove_socket__(name)
 
-    @classmethod
-    def close(cls):
-        print("WebsocketManager close")
-        for name in cls.WebsocketDict:
-            cls.WebsocketDict[name].close()
-            cls.__tasks__[name].join()
-            cls.__socket_lock_dict__[name].release()
-            del cls.__tasks__[name]
+    @staticmethod
+    def close():
+        for name in list(WebsocketManager.WebsocketDict.keys()):
+            WebsocketManager.__remove_socket__(name)
+        WebsocketManager.__logger__.info("WebsocketManager closed")
+
+    @staticmethod
+    def __remove_socket__(name):
+        WebsocketManager.WebsocketDict[name].close()
+        WebsocketManager.__tasks__[name].join()
+        WebsocketManager.__socket_lock_dict__[name].release()
+        del WebsocketManager.__tasks__[name]
+        del WebsocketManager.__socket_lock_dict__[name]
+        del WebsocketManager.WebsocketDict[name]

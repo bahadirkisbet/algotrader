@@ -28,7 +28,8 @@ class Binance(ExchangeBase):
             "fetch_candle": "/api/v3/klines?symbol={}&interval={}&startTime={}&endTime={}&limit={}",
             "fetch_product_list": "/api/v3/ticker/24hr"
         }
-        self.first_data_date = datetime.datetime(2017, 8, 14, 0, 0, 0, 0)
+        self.first_data_date = datetime.datetime(2021, 8, 14, 0, 0, 0, 0)
+        # datetime.datetime(2017, 8, 14, 0, 0, 0, 0)
 
     def fetch_product_list(self, sorting_option: SortingOption = None, limit: int = -1) -> List[str]:
         assert "fetch_product_list" in self.api_endpoints, "`fetch_product_list` endpoint not defined"
@@ -84,10 +85,13 @@ class Binance(ExchangeBase):
 
     def __make_request__(self, url):
         self.logger.info(f"Fetching candle data from {url}")
-        self.request_lock.acquire()  # lock
-        response = requests.get(url)
-        self.request_lock.release()  # unlock
-        if response.status_code != 200:
+        try:
+            self.request_lock.acquire()  # lock
+            response = requests.get(url)
+        finally:
+            self.request_lock.release()  # unlock
+
+        if response is None or response.status_code != 200:
             self.logger.warning(f"Error while fetching candle - {response.status_code} - {response.text} - {url}")
             return None
         json_data = response.json()

@@ -1,7 +1,10 @@
 import configparser
 import datetime
 import logging
+
 from typing import List, Dict, Optional
+from queue import Queue
+from threading import Thread
 
 from common_models.data_models.candle import Candle
 from data_center.jobs.technical_indicator import TechnicalIndicator
@@ -12,8 +15,6 @@ from managers.websocket_manager import WebsocketManager
 from startup import ServiceManager
 from utils.singleton_metaclass.singleton import Singleton
 from common_models.time_models import Interval
-from queue import Queue
-from threading import Thread
 
 
 class DataCenter(metaclass=Singleton):
@@ -30,7 +31,7 @@ class DataCenter(metaclass=Singleton):
         self.__time_frame__: Interval = Interval.ONE_MINUTE  # TODO: Get from config file
 
         self.symbols: Dict[str, List[Candle]] = {}
-        self.__buffer__: Queue[Candle] = Queue()
+        self.__buffer__: Queue[Optional[Candle]] = Queue()
         self.indicator_codes = []
 
         # register callbacks
@@ -46,7 +47,6 @@ class DataCenter(metaclass=Singleton):
 
         # subscribe to the websocket
         self.exchange.subscribe_to_websocket(list(self.symbols.keys()), self.__time_frame__)
-        self.logger.info("DataCenter started")
 
     def fetch_product_list(self):
         # TODO: sorting option and limit will be added later from config file
@@ -54,7 +54,7 @@ class DataCenter(metaclass=Singleton):
         self.logger.info(f"Total symbols: {len(symbols)} in the exchange {self.exchange.get_exchange_name()}")
         return symbols
 
-    def push_candle(self, candle: Candle):
+    def push_candle(self, candle: Optional[Candle]):
         self.__buffer__.put(candle)
 
     def print_info(self, message, error_code):
@@ -77,11 +77,12 @@ class DataCenter(metaclass=Singleton):
                 self.symbols[candle.symbol].append(candle)
                 self.logger.info(candle)
                 self.__calculate_candle__(candle)
+        self.logger.info("DataCenter exited from the loop")
 
     def close(self):
         self.__run_forever__ = False
-        self.__thread__.join(2)
-        print("DataCenter closed")
+        self.push_candle(None)
+        self.__thread__.join()
         for symbol in self.symbols:
             data = self.symbols[symbol]
             self.exchange.unsubscribe_from_websocket(symbol, self.__time_frame__)
@@ -90,7 +91,6 @@ class DataCenter(metaclass=Singleton):
                 symbol, self.data_type,
                 str(self.__time_frame__.value),
                 data)
-        print("DataCenter closed --")
         WebsocketManager.close()
 
     def __load_from_archive__(self, symbols):
@@ -125,11 +125,7 @@ class DataCenter(metaclass=Singleton):
         total_length = len(archived_data)
         time_diff = datetime.timedelta(minutes=self.__time_frame__.value)
 
-        total_number_of_candles = len([candle.timestamp for candle in archived_data])
-        total_number_of_distinct_candles = len({candle.timestamp for candle in archived_data})
-        if total_number_of_candles != total_number_of_distinct_candles:
-            self.logger.warning("There are duplicate candles in the archive. This will cause problems in the "
-                                "back-filling")
+        self.__check_duplicate__(archived_data)
 
         while current_datetime < end_datetime and index < total_length:
             candle = archived_data[index]  # current candle
@@ -150,6 +146,13 @@ class DataCenter(metaclass=Singleton):
             # to complete till the current time
             lost_data = self.backfill(symbol, current_datetime, end_datetime, self.__time_frame__)
             self.symbols[symbol].extend(lost_data)
+
+    def __check_duplicate__(self, archived_data):
+        total_number_of_candles = len([candle.timestamp for candle in archived_data])
+        total_number_of_distinct_candles = len({candle.timestamp for candle in archived_data})
+        if total_number_of_candles != total_number_of_distinct_candles:
+            self.logger.warning("There are duplicate candles in the archive. This will cause problems in the "
+                                "back-filling")
 
     def request_candle(self, symbol: str, index: int = 0, reverse: bool = False) -> Optional[Candle]:
         if symbol not in self.symbols:
