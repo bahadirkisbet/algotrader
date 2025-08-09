@@ -2,15 +2,13 @@ import asyncio
 import logging
 import signal
 import sys
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
-from models.data_models.candle import Candle
-from models.time_models import Interval
+from strategy_provider.strategy_center import StrategyCenter
+
 from data_center.async_data_center import AsyncDataCenter
-from data_provider.exchange_collection.exchange_library.binance_spot import Binance
 from managers.async_archive_manager import AsyncArchiveManager
 from utils.di_container import get_container
-from strategy_provider.strategy_center import StrategyCenter
 from utils.singleton_metaclass.singleton import Singleton
 
 

@@ -1,14 +1,14 @@
 import asyncio
-import json
-import aiohttp
-from typing import List, Callable, Optional
-
 import datetime
-from models.data_models.candle import Candle
-from models.exchange_type import ExchangeType
-from models.sorting_option import SortingOption, SortBy
-from models.exchange_info import ExchangeInfo
+from typing import Callable, List, Optional
+
+import aiohttp
 from data_provider.exchange_collection.exchange import Exchange
+
+from models.data_models.candle import Candle
+from models.exchange_info import ExchangeInfo
+from models.exchange_type import ExchangeType
+from models.sorting_option import SortBy, SortingOption
 from models.time_models import Interval
 
 
@@ -128,7 +128,7 @@ class Binance(Exchange):
                 
                 return candles
                 
-        except Exception as e:
+        except Exception:
             return None
     
     def __create_url_list__(self,

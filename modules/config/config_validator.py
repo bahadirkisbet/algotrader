@@ -1,7 +1,7 @@
-import os
 import configparser
-from typing import Dict, Any, List, Tuple
+import os
 from enum import Enum
+from typing import Any, Dict, List, Tuple
 
 
 class ConfigSection(Enum):

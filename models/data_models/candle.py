@@ -1,6 +1,6 @@
 import json
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict
 
 
 class Candle:

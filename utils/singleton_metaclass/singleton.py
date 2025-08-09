@@ -1,5 +1,5 @@
 import threading
-from typing import Dict, Any
+from typing import Any, Dict
 
 
 class Singleton(type):

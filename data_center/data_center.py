@@ -2,21 +2,20 @@ import configparser
 import datetime
 import logging
 import signal
-import sys
-from typing import List, Dict, Optional
 from queue import Queue
-from threading import Thread, Event
+from threading import Event, Thread
+from typing import Dict, List, Optional
 
-from models.data_models.candle import Candle
+from algotrader.modules.archive.archive_manager import ArchiveManager
+from data_provider.exchange_collection.exchange import Exchange
+
 from data_center.jobs.technical_indicator import TechnicalIndicator
 from data_center.jobs.technical_indicators.ema import ExponentialMovingAverage
 from data_center.jobs.technical_indicators.sma import SimpleMovingAverage
-from data_provider.exchange_collection.exchange import Exchange
-from algotrader.modules.archive.archive_manager import ArchiveManager
 from managers.websocket_manager import WebsocketManager
-from utils.di_container import get
-from utils.singleton_metaclass.singleton import Singleton
+from models.data_models.candle import Candle
 from models.time_models import Interval
+from utils.singleton_metaclass.singleton import Singleton
 
 
 class DataCenter(metaclass=Singleton):

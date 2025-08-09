@@ -1,7 +1,13 @@
 import datetime
 import unittest
 
-from data_provider.exchange_collection.exchange_factory import ExchangeType, ExchangeFactory, Exchange, Interval
+from data_provider.exchange_collection.exchange_factory import (
+    Exchange,
+    ExchangeFactory,
+    ExchangeType,
+    Interval,
+)
+
 from managers.service_manager import ServiceManager
 
 

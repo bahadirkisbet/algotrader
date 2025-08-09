@@ -1,8 +1,8 @@
-import asyncio
 import logging
 import sys
+
+from modules.websocket.async_websocket_manager import AsyncWebsocketManager
 from utils.service_initializer import initialize_services, shutdown_services
-from algotrader.modules.websocket.async_websocket_manager import AsyncWebsocketManager
 
 
 async def inject_services():
@@ -21,7 +21,7 @@ async def inject_services():
         sys.exit(1)
 
 
-async def shutdown_services():
+async def shutdown_all_services():
     """Shutdown all services gracefully."""
     try:
         await AsyncWebsocketManager.close()

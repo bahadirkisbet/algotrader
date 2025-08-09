@@ -1,10 +1,10 @@
-import asyncio
 import logging
-from typing import Dict, Type, Optional
+from typing import Dict, Optional, Type
+
+from data_provider.exchange_collection.async_binance_exchange import AsyncBinanceExchange
+from data_provider.exchange_collection.async_exchange import AsyncExchange
 
 from models.exchange_type import ExchangeType
-from data_provider.exchange_collection.async_exchange import AsyncExchange
-from data_provider.exchange_collection.async_binance_exchange import AsyncBinanceExchange
 
 
 class AsyncExchangeFactory:

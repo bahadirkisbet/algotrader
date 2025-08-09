@@ -1,15 +1,15 @@
 import configparser
 import datetime
 import logging
-from typing import Optional, List
-
-from models.exchange_info import ExchangeInfo
-from models.time_models import Interval
-from data_provider.exchange_collection.exchange import Exchange
 from abc import ABC, abstractmethod
+from typing import List, Optional
+
+from data_provider.exchange_collection.exchange import Exchange
 
 from managers.service_manager import ServiceManager
 from managers.websocket_manager import WebsocketManager
+from models.exchange_info import ExchangeInfo
+from models.time_models import Interval
 
 
 class ExchangeBase(Exchange, ABC):

@@ -1,13 +1,18 @@
 import asyncio
 import datetime
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
+from data_provider.exchange_collection.exchange import Exchange
+
+from managers.async_archive_manager import AsyncArchiveManager
+from managers.technical_indicators import (
+    ExponentialMovingAverage,
+    SimpleMovingAverage,
+    TechnicalIndicator,
+)
 from models.data_models.candle import Candle
 from models.time_models import Interval
-from data_provider.exchange_collection.exchange import Exchange
-from managers.async_archive_manager import AsyncArchiveManager
-from managers.technical_indicators import SimpleMovingAverage, ExponentialMovingAverage, TechnicalIndicator
 
 
 class AsyncDataCenter:

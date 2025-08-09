@@ -1,10 +1,10 @@
 import datetime
-from abc import abstractmethod, ABC
-from typing import List, Callable, Optional
+from abc import ABC, abstractmethod
+from typing import Callable, List
 
 from models.exchange_info import ExchangeInfo
-from models.time_models import Interval
 from models.sorting_option import SortingOption
+from models.time_models import Interval
 
 
 class Exchange(ABC):

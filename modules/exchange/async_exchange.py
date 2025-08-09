@@ -1,11 +1,11 @@
 import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional, Callable, Any
 from datetime import datetime
+from typing import Any, Callable, Dict, List, Optional
 
-from models.exchange_type import ExchangeType
 from models.data_models.candle import Candle
+from models.exchange_type import ExchangeType
 from models.time_models import Interval
 
 

@@ -2,9 +2,9 @@ import asyncio
 import configparser
 import json
 import logging
-import ssl
 from abc import ABC
-from typing import Dict, Callable, Optional
+from typing import Callable, Dict, Optional
+
 import websockets
 
 from utils.di_container import get

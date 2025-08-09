@@ -1,11 +1,9 @@
 import asyncio
 import configparser
-import json
-import logging
-import os
 import gzip
-from typing import List, Optional
-import aiofiles
+import json
+import os
+from typing import List
 
 from models.data_models.candle import Candle
 from models.time_models import Interval

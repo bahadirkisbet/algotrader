@@ -1,10 +1,12 @@
 import asyncio
+import configparser
 import signal
 import sys
-import configparser
-from models.exchange_type import ExchangeType
-from data_center.async_data_center import AsyncDataCenter
+
 from data_provider.exchange_collection.exchange_factory import ExchangeFactory
+
+from data_center.async_data_center import AsyncDataCenter
+from models.exchange_type import ExchangeType
 from startup import inject_services, shutdown_services
 from utils.di_container import get, register
 

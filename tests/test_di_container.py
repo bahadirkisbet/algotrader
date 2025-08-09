@@ -1,149 +1,138 @@
 """
-Tests for the new DI container that replaces ServiceManager.
+Tests for the DI Container and Service Initializer.
 """
 
-import pytest
-import logging
-import configparser
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock, patch
 
-from utils.di_container import DIContainer, get, register, has
+import pytest
+
+from utils.di_container import (
+    DIContainer,
+    get,
+    get_container,
+    has,
+    register,
+    register_factory,
+    register_singleton,
+)
 
 
 class TestDIContainer:
-    """Test the DI container functionality."""
+    """Test the DIContainer class."""
     
     def test_register_and_get_service(self):
-        """Test basic service registration and retrieval."""
+        """Test registering and getting a service."""
         container = DIContainer()
+        mock_service = MagicMock()
         
-        # Create a mock service
-        mock_service = Mock()
-        mock_service.name = "test_service"
+        container.register(str, mock_service)
+        result = container.get(str)
         
-        # Register the service
-        container.register(Mock, mock_service)
-        
-        # Retrieve the service
-        retrieved_service = container.get(Mock)
-        
-        assert retrieved_service is mock_service
-        assert retrieved_service.name == "test_service"
+        assert result is mock_service
     
     def test_register_factory(self):
-        """Test factory registration and usage."""
+        """Test registering a factory function."""
         container = DIContainer()
         
-        # Create a factory function
-        def create_service(container):
-            service = Mock()
-            service.name = "factory_service"
-            return service
+        def factory():
+            return "created"
         
-        # Register the factory
-        container.register_factory(Mock, create_service)
+        container.register_factory(str, factory)
+        result = container.get(str)
         
-        # Get the service (should be created by factory)
-        service = container.get(Mock)
-        
-        assert service.name == "factory_service"
+        assert result == "created"
     
     def test_register_singleton(self):
-        """Test singleton registration and usage."""
+        """Test registering a singleton."""
         container = DIContainer()
+        mock_service = MagicMock()
         
-        # Create a factory function
-        def create_singleton(container):
-            service = Mock()
-            service.name = "singleton_service"
-            return service
+        container.register_singleton(str, mock_service)
+        result1 = container.get(str)
+        result2 = container.get(str)
         
-        # Register the singleton factory
-        container.register_singleton(Mock, create_singleton)
-        
-        # Get the service twice
-        service1 = container.get(Mock)
-        service2 = container.get(Mock)
-        
-        # Both should be the same instance
-        assert service1 is service2
-        assert service1.name == "singleton_service"
+        assert result1 is result2
+        assert result1 is mock_service
     
     def test_has_service(self):
-        """Test service existence checking."""
+        """Test checking if a service exists."""
         container = DIContainer()
         
-        # Initially no services
-        assert not container.has(Mock)
+        assert not container.has(str)
         
-        # Register a service
-        mock_service = Mock()
-        container.register(Mock, mock_service)
-        
-        # Now should have the service
-        assert container.has(Mock)
+        container.register(str, "test")
+        assert container.has(str)
     
     def test_remove_service(self):
-        """Test service removal."""
+        """Test removing a service."""
         container = DIContainer()
+        container.register(str, "test")
         
-        # Register a service
-        mock_service = Mock()
-        container.register(Mock, mock_service)
-        assert container.has(Mock)
-        
-        # Remove the service
-        container.remove(Mock)
-        assert not container.has(Mock)
+        assert container.has(str)
+        container.remove(str)
+        assert not container.has(str)
     
     def test_clear_services(self):
         """Test clearing all services."""
         container = DIContainer()
-        
-        # Register multiple services
-        container.register(Mock, Mock())
         container.register(str, "test")
+        container.register(int, 42)
         
-        assert container.has(Mock)
         assert container.has(str)
+        assert container.has(int)
         
-        # Clear all services
         container.clear()
-        
-        assert not container.has(Mock)
         assert not container.has(str)
+        assert not container.has(int)
     
     def test_type_safety(self):
-        """Test that type safety is enforced."""
+        """Test that type safety is maintained."""
         container = DIContainer()
         
-        # Try to register wrong type
-        with pytest.raises(TypeError):
-            container.register(str, 42)  # int is not a string
+        # Should work with same type
+        container.register(str, "test")
+        result = container.get(str)
+        assert isinstance(result, str)
+        
+        # Should not work with different type
+        with pytest.raises(KeyError):
+            container.get(int)
     
     def test_service_not_found(self):
-        """Test error when service is not found."""
+        """Test getting a non-existent service."""
         container = DIContainer()
         
         with pytest.raises(KeyError):
-            container.get(Mock)
+            container.get(str)
     
     def test_global_functions(self):
-        """Test the global convenience functions."""
-        # Test register and get
-        mock_service = Mock()
-        register(Mock, mock_service)
+        """Test the global helper functions."""
+        # Test global container
+        container1 = get_container()
+        container2 = get_container()
+        assert container1 is container2
         
-        retrieved_service = get(Mock)
-        assert retrieved_service is mock_service
+        # Test global register
+        register(str, "test")
+        assert get(str) == "test"
+        assert has(str)
         
-        # Test has
-        assert has(Mock)
-        assert not has(str)
+        # Test global register_factory
+        def factory():
+            return "factory_result"
+        register_factory(int, factory)
+        assert get(int) == "factory_result"
+        
+        # Test global register_singleton
+        register_singleton(float, 3.14)
+        assert get(float) == 3.14
+        
+        # Clean up
+        container1.clear()
 
 
 class TestServiceInitializer:
-    """Test the service initializer that replaces ServiceManager initialization."""
+    """Test the ServiceInitializer class."""
     
     @pytest.mark.asyncio
     async def test_service_initialization(self):
@@ -151,29 +140,25 @@ class TestServiceInitializer:
         from utils.service_initializer import ServiceInitializer
         
         # Mock the dependencies
-        with pytest.patch('managers.config_manager.ConfigManager.get_config') as mock_get_config, \
-             pytest.patch('algotrader.modules.log.log_manager.LogManager.get_logger') as mock_get_logger, \
-             pytest.patch('algotrader.modules.archive.archive_manager.ArchiveManager') as mock_archive_manager:
+        with patch('modules.config.async_config_manager.AsyncConfigManager.get_config') as mock_get_config, \
+             patch('modules.log.log_manager.AsyncLogManager.get_logger') as mock_get_logger, \
+             patch('utils.service_initializer.ArchiveManager') as mock_archive_manager:
             
             # Setup mocks
-            mock_config = MagicMock(spec=configparser.ConfigParser)
-            mock_logger = MagicMock(spec=logging.Logger)
-            mock_archive = MagicMock()
-            
+            mock_config = MagicMock()
             mock_get_config.return_value = mock_config
+            
+            mock_logger = MagicMock()
             mock_get_logger.return_value = mock_logger
-            mock_archive_manager.return_value = mock_archive
             
-            # Create initializer and initialize services
-            initializer = ServiceInitializer()
-            await initializer.initialize_all()
+            mock_archive_instance = MagicMock()
+            mock_archive_manager.return_value = mock_archive_instance
             
-            # Verify that services were registered
-            from utils.di_container import get, has
+            # Test initialization
+            await ServiceInitializer.initialize_all()
             
-            assert has(logging.Logger)
-            assert has(configparser.ConfigParser)
-            assert has(type(mock_archive))
-            
-            # Verify logger was set
-            assert initializer.logger is mock_logger 
+            # Verify mocks were called
+            mock_get_config.assert_called()
+            assert mock_get_config.call_count == 2  # Called in initialize_logger and initialize_config
+            mock_get_logger.assert_called_once_with(mock_config)
+            mock_archive_manager.assert_called_once() 

@@ -1,14 +1,14 @@
 import asyncio
 import json
-import logging
-from typing import List, Dict, Optional, Any
-from datetime import datetime, timedelta
-import aiohttp
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from models.exchange_type import ExchangeType
-from models.data_models.candle import Candle
-from models.time_models import Interval
+import aiohttp
 from data_provider.exchange_collection.async_exchange import AsyncExchange
+
+from models.data_models.candle import Candle
+from models.exchange_type import ExchangeType
+from models.time_models import Interval
 
 
 class AsyncBinanceExchange(AsyncExchange):

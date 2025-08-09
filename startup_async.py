@@ -1,10 +1,9 @@
-import asyncio
 import logging
 import sys
-from typing import Dict, Any, Optional
+
+from algotrader.modules.websocket.async_websocket_manager import AsyncWebsocketManager
 
 from utils.di_container import get_container
-from algotrader.modules.websocket.async_websocket_manager import AsyncWebsocketManager
 
 
 async def inject_services():

@@ -1,0 +1,105 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "algotrader"
+version = "0.1.0"
+description = "Algorithmic trading application"
+readme = "README.md"
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.10"
+ignore_missing_imports = false
+warn_unused_ignores = true
+warn_redundant_casts = true
+
+# package.json-like scripts via taskipy: `task <name>`
+[tool.taskipy.tasks]
+# App
+dev = "python application.py"
+dev_async = "python application_async.py"
+prod = "PYTHONUNBUFFERED=1 python -O application.py"
+prod_async = "PYTHONUNBUFFERED=1 python -O application_async.py"
+
+# Services (websocket etc.)
+start_ws = "python -c \"import asyncio; import startup; asyncio.run(startup.inject_services())\""
+stop_ws = "python -c \"import asyncio; import startup; asyncio.run(startup.shutdown_all_services())\""
+
+# Tests
+test = "pytest -v"
+ test_all = "pytest tests/ -v"
+ test_di = "pytest tests/test_di_container.py -v"
+ test_candle = "pytest tests/test_candle.py -v"
+ cov = "pytest --cov=. --cov-report=term-missing"
+
+# Quality
+lint = "ruff check ."
+fmt = "black . && isort ."
+fmt_check = "black --check . && isort --check-only ."
+typecheck = "mypy ."
+
+# Env / housekeeping
+install_dev = "pip install -r requirements.txt && pip install black ruff mypy pytest pytest-asyncio taskipy isort"
+clean = "find . -type d -name __pycache__ -exec rm -rf {} +; rm -rf .pytest_cache .mypy_cache .ruff_cache build dist"
+
+# Hatch scripts: `hatch run <name>`
+[tool.hatch.envs.default.scripts]
+# App
+ dev = "python application.py"
+ dev_async = "python application_async.py"
+ prod = "PYTHONUNBUFFERED=1 python -O application.py"
+ prod_async = "PYTHONUNBUFFERED=1 python -O application_async.py"
+# Services
+ start_ws = "python -c 'import asyncio; import startup; asyncio.run(startup.inject_services())'"
+ stop_ws = "python -c 'import asyncio; import startup; asyncio.run(startup.shutdown_all_services())'"
+# Tests
+ test = "pytest -v"
+ test_all = "pytest tests/ -v"
+ test_di = "pytest tests/test_di_container.py -v"
+ test_candle = "pytest tests/test_candle.py -v"
+ cov = "pytest --cov=. --cov-report=term-missing"
+# Quality
+ lint = "ruff check ."
+ fmt = "black . && isort ."
+ fmt_check = "black --check . && isort --check-only ."
+ typecheck = "mypy ."
+# Housekeeping
+ clean = "find . -type d -name __pycache__ -exec rm -rf {} +; rm -rf .pytest_cache .mypy_cache .ruff_cache build dist"
+
+# PDM scripts: `pdm run <name>`
+[tool.pdm.scripts]
+# App
+dev = { cmd = "python application.py" }
+dev_async = { cmd = "python application_async.py" }
+prod = { cmd = "python -O application.py", env = { PYTHONUNBUFFERED = "1" } }
+prod_async = { cmd = "python -O application_async.py", env = { PYTHONUNBUFFERED = "1" } }
+# Services
+start_ws = { cmd = "python -c 'import asyncio; import startup; asyncio.run(startup.inject_services())'" }
+stop_ws = { cmd = "python -c 'import asyncio; import startup; asyncio.run(startup.shutdown_all_services())'" }
+# Tests
+test = { cmd = "pytest -v" }
+test_all = { cmd = "pytest tests/ -v" }
+test_di = { cmd = "pytest tests/test_di_container.py -v" }
+test_candle = { cmd = "pytest tests/test_candle.py -v" }
+cov = { cmd = "pytest --cov=. --cov-report=term-missing" }
+# Quality
+lint = { cmd = "ruff check ." }
+fmt = { cmd = "sh -c 'black . && isort .'" }
+fmt_check = { cmd = "sh -c 'black --check . && isort --check-only .'" }
+typecheck = { cmd = "mypy ." }
+# Housekeeping
+clean = { cmd = "sh -c 'find . -type d -name __pycache__ -exec rm -rf {} +; rm -rf .pytest_cache .mypy_cache .ruff_cache build dist'" } 

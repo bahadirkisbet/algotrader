@@ -5,11 +5,11 @@ Simple test script to verify async functionality.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from models.time_models import Interval
-from data_center.async_data_center import AsyncDataCenter
 from data_provider.exchange_collection.exchange_library.binance_spot import Binance
+
+from data_center.async_data_center import AsyncDataCenter
 from managers.async_archive_manager import AsyncArchiveManager
 
 

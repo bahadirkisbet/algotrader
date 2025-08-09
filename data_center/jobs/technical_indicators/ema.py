@@ -1,7 +1,7 @@
-from typing import Optional, Callable
+from typing import Callable, Optional
 
-from models.data_models.candle import Candle
 from data_center.jobs.technical_indicator import TechnicalIndicator
+from models.data_models.candle import Candle
 
 
 class ExponentialMovingAverage(TechnicalIndicator):

@@ -3,7 +3,7 @@ import configparser
 import os
 from typing import Any, Dict, Optional
 
-from algotrader.modules.config.config_validator import ConfigValidator
+from .config_validator import ConfigValidator
 
 
 class AsyncConfigManager:
