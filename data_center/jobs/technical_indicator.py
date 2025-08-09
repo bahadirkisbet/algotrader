@@ -3,11 +3,12 @@ from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
 from models.data_models.candle import Candle
-from utils.di_container import get
+from utils.dependency_injection_container import get
 
 
-class TechnicalIndicator(ABC):
-    __registry__ = {}
+class DataCenterIndicator(ABC):
+    """Base class for technical indicators that integrate with the data center's data flow."""
+    registry = {}
 
     def __init__(self, symbol: str, request_callback: Callable):
         self.logger: logging.Logger = get(logging.Logger)
@@ -22,7 +23,7 @@ class TechnicalIndicator(ABC):
 
     @staticmethod
     def get_instance(symbol, code):
-        return TechnicalIndicator.__registry__.get(f"{symbol}_{code}", None)
+        return DataCenterIndicator.registry.get(f"{symbol}_{code}", None)
 
     @abstractmethod
     def calculate(self, candle: Candle, index: int = 0) -> Optional[float]:

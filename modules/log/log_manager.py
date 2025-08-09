@@ -6,26 +6,26 @@ from logging.handlers import RotatingFileHandler
 from typing import Optional
 
 
-class AsyncLogManager:
-    """Asynchronous log manager for the application."""
+class LogManager:
+    """Log manager for the application."""
     
-    __logger__: Optional[logging.Logger] = None
-    __lock__ = asyncio.Lock()
+    _logger: Optional[logging.Logger] = None
+    _lock = asyncio.Lock()
 
     @classmethod
     async def get_logger(cls, config) -> logging.Logger:
         """Get logger instance asynchronously."""
-        if cls.__logger__ is None:
-            async with cls.__lock__:
-                if cls.__logger__ is None:  # Double-check pattern
-                    cls.__logger__ = await cls.__logger_setup__(config)
-        return cls.__logger__
+        if cls._logger is None:
+            async with cls._lock:
+                if cls._logger is None:  # Double-check pattern
+                    cls._logger = await cls.setup_logger(config)
+        return cls._logger
 
     @classmethod
-    async def __logger_setup__(cls, config: configparser.ConfigParser) -> logging.Logger:
+    async def setup_logger(cls, config: configparser.ConfigParser) -> logging.Logger:
         """Setup logger asynchronously."""
         # Determine logger level from the config
-        logging_level = cls.__config_logging_level__(config)
+        logging_level = cls.get_logging_level(config)
 
         # Create logger
         logger: logging.Logger = logging.getLogger(__name__)
@@ -70,12 +70,12 @@ class AsyncLogManager:
         # Prevent duplicate log messages
         logger.propagate = False
 
-        logger.info("Async logger setup complete")
+        logger.info("Logger setup complete")
 
         return logger
 
     @staticmethod
-    def __config_logging_level__(config: configparser.ConfigParser) -> int:
+    def get_logging_level(config: configparser.ConfigParser) -> int:
         """Get logging level from config using if-elif for compatibility."""
         log_level = config["DEFAULT"]["log_level"].lower()
         
@@ -95,13 +95,12 @@ class AsyncLogManager:
     @classmethod
     async def shutdown(cls):
         """Shutdown the log manager gracefully."""
-        if cls.__logger__:
+        if cls._logger:
             # Remove all handlers
-            for handler in cls.__logger__.handlers[:]:
-                cls.__logger__.removeHandler(handler)
-                handler.close()
-            cls.__logger__ = None
+            for handler in cls._logger.handlers[:]:
+                cls._logger.removeHandler(handler)
+            cls._logger = None
 
 
 # Backward compatibility alias
-LogManager = AsyncLogManager
+AsyncLogManager = LogManager

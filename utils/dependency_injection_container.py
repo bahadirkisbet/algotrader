@@ -1,7 +1,7 @@
 """
 Minimal Dependency Injection Container
 
-A fast, lightweight DI container that provides clear dependency management
+A fast, lightweight dependency injection container that provides clear dependency management
 without ambiguity or complex abstractions.
 """
 
@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, Optional, Type, TypeVar
 T = TypeVar('T')
 
 
-class DIContainer:
+class DependencyInjectionContainer:
     """
     Fast, minimal dependency injection container.
     
@@ -25,7 +25,7 @@ class DIContainer:
     
     def __init__(self):
         self._services: Dict[Type, Any] = {}
-        self._factories: Dict[Type, Callable[['DIContainer'], Any]] = {}
+        self._factories: Dict[Type, Callable[['DependencyInjectionContainer'], Any]] = {}
         self._singletons: Dict[Type, Any] = {}
         self._logger: Optional[logging.Logger] = None
     
@@ -100,45 +100,43 @@ class DIContainer:
     
     async def shutdown(self) -> None:
         """Shutdown the container and cleanup resources."""
-        if self._logger:
-            self._logger.info("Shutting down DI container...")
-        
-        # Clear all services
         self.clear()
-        
         if self._logger:
-            self._logger.info("DI container shutdown complete")
+            self._logger.info("DependencyInjectionContainer shutdown complete")
 
 
 # Global container instance
-container = DIContainer()
+_container: Optional[DependencyInjectionContainer] = None
 
 
-def get_container() -> DIContainer:
-    """Get the global DI container instance."""
-    return container
+def get_container() -> DependencyInjectionContainer:
+    """Get the global dependency injection container instance."""
+    global _container
+    if _container is None:
+        _container = DependencyInjectionContainer()
+    return _container
 
 
 def register(service_type: Type[T], instance: T) -> None:
     """Register a service in the global container."""
-    container.register(service_type, instance)
+    get_container().register(service_type, instance)
 
 
-def register_factory(service_type: Type[T], factory: Callable[[DIContainer], T]) -> None:
+def register_factory(service_type: Type[T], factory: Callable[[], T]) -> None:
     """Register a factory in the global container."""
-    container.register_factory(service_type, factory)
+    get_container().register_factory(service_type, factory)
 
 
-def register_singleton(service_type: Type[T], factory: Callable[[DIContainer], T]) -> None:
+def register_singleton(service_type: Type[T], factory: Callable[[DependencyInjectionContainer], T]) -> None:
     """Register a singleton factory in the global container."""
-    container.register_singleton(service_type, factory)
+    get_container().register_singleton(service_type, factory)
 
 
 def get(service_type: Type[T]) -> T:
     """Get a service from the global container."""
-    return container.get(service_type)
+    return get_container().get(service_type)
 
 
 def has(service_type: Type[T]) -> bool:
     """Check if a service exists in the global container."""
-    return container.has(service_type) 
+    return get_container().has(service_type) 

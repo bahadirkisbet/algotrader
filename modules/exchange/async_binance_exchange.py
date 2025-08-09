@@ -4,14 +4,14 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 import aiohttp
-from data_provider.exchange_collection.async_exchange import AsyncExchange
+from modules.exchange.exchange_interface import ExchangeInterface
 
 from models.data_models.candle import Candle
 from models.exchange_type import ExchangeType
 from models.time_models import Interval
 
 
-class AsyncBinanceExchange(AsyncExchange):
+class AsyncBinanceExchange(ExchangeInterface):
     """Async Binance exchange implementation."""
 
     def __init__(self, exchange_type: ExchangeType):

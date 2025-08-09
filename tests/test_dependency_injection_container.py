@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from utils.di_container import (
-    DIContainer,
+from utils.dependency_injection_container import (
+    DependencyInjectionContainer,
     get,
     get_container,
     has,
@@ -17,12 +17,12 @@ from utils.di_container import (
 )
 
 
-class TestDIContainer:
-    """Test the DIContainer class."""
+class TestDependencyInjectionContainer:
+    """Test the DependencyInjectionContainer class."""
     
     def test_register_and_get_service(self):
         """Test registering and getting a service."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         mock_service = MagicMock()
         
         container.register(str, mock_service)
@@ -32,7 +32,7 @@ class TestDIContainer:
     
     def test_register_factory(self):
         """Test registering a factory function."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         
         def factory():
             return "created"
@@ -44,7 +44,7 @@ class TestDIContainer:
     
     def test_register_singleton(self):
         """Test registering a singleton."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         mock_service = MagicMock()
         
         container.register_singleton(str, mock_service)
@@ -56,7 +56,7 @@ class TestDIContainer:
     
     def test_has_service(self):
         """Test checking if a service exists."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         
         assert not container.has(str)
         
@@ -65,7 +65,7 @@ class TestDIContainer:
     
     def test_remove_service(self):
         """Test removing a service."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         container.register(str, "test")
         
         assert container.has(str)
@@ -74,7 +74,7 @@ class TestDIContainer:
     
     def test_clear_services(self):
         """Test clearing all services."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         container.register(str, "test")
         container.register(int, 42)
         
@@ -87,7 +87,7 @@ class TestDIContainer:
     
     def test_type_safety(self):
         """Test that type safety is maintained."""
-        container = DIContainer()
+        container = DependencyInjectionContainer()
         
         # Should work with same type
         container.register(str, "test")

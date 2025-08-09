@@ -1,17 +1,17 @@
 from typing import Callable, Optional
 
-from data_center.jobs.technical_indicator import TechnicalIndicator
+from data_center.jobs.technical_indicator import DataCenterIndicator
 from models.data_models.candle import Candle
 
 
-class SimpleMovingAverage(TechnicalIndicator):
+class SimpleMovingAverage(DataCenterIndicator):
     def __init__(self, symbol: str, request_callback: Callable, period: int = 14):
         super().__init__(symbol, request_callback)
         self.period = period
-        self.__total_sum__ = 0
-        self.__total_count__ = 0
+        self.total_sum = 0
+        self.total_count = 0
         self.code = f"sma_{self.period}"
-        self.__registry__[f"{self.symbol}_{self.code}"] = self
+        self.registry[f"{self.symbol}_{self.code}"] = self
 
     def calculate(self, candle: Candle, index: Optional[int] = None) -> Optional[float]:
         if index is None:
@@ -24,11 +24,11 @@ class SimpleMovingAverage(TechnicalIndicator):
         previous_candle = self.request_callback(self.symbol, historical_index, from_back)
 
         if previous_candle is not None:
-            self.__total_sum__ -= previous_candle.close
+            self.total_sum -= previous_candle.close
         else:  # it does not reach to the value to calculate the average properly
-            self.__total_count__ += 1
+            self.total_count += 1
 
-        self.__total_sum__ += candle.close
-        current_value = self.__total_sum__ / self.period if self.__total_count__ >= self.period else None
+        self.total_sum += candle.close
+        current_value = self.total_sum / self.period if self.total_count >= self.period else None
         self.data.append([candle.timestamp, current_value])
         return current_value

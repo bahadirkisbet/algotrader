@@ -137,40 +137,60 @@ class Candle:
         return json.dumps(self.to_dict())
 
     @property
+    def open_price(self) -> float:
+        """Get the opening price."""
+        return self.open
+
+    @property
+    def high_price(self) -> float:
+        """Get the highest price during the period."""
+        return self.high
+
+    @property
+    def low_price(self) -> float:
+        """Get the lowest price during the period."""
+        return self.low
+
+    @property
+    def close_price(self) -> float:
+        """Get the closing price."""
+        return self.close
+
+    @property
     def datetime(self) -> datetime:
         """Get the datetime representation of the timestamp."""
         return datetime.fromtimestamp(self.timestamp / 1000)
 
     @property
     def price_change(self) -> float:
-        """Calculate the absolute price change."""
+        """Get the absolute price change from open to close."""
         return self.close - self.open
 
     @property
     def price_change_percent(self) -> float:
-        """Calculate the percentage price change."""
+        """Get the percentage price change from open to close."""
         if self.open == 0:
             return 0.0
         return ((self.close - self.open) / self.open) * 100
 
     @property
     def body_size(self) -> float:
-        """Calculate the size of the candle body."""
+        """Get the size of the candle body (open to close)."""
         return abs(self.close - self.open)
 
     @property
     def upper_shadow(self) -> float:
-        """Calculate the upper shadow (wick) size."""
+        """Get the size of the upper shadow (high to max of open/close)."""
         return self.high - max(self.open, self.close)
 
     @property
     def lower_shadow(self) -> float:
-        """Calculate the lower shadow (wick) size."""
+        """Get the size of the lower shadow (min of open/close to low)."""
         return min(self.open, self.close) - self.low
 
     @property
     def total_range(self) -> float:
-        """Calculate the total range of the candle."""
+        """Get the total price range (high to low)."""
         return self.high - self.low
 
     def is_bullish(self) -> bool:
@@ -183,7 +203,7 @@ class Candle:
 
     def is_doji(self, threshold: float = 0.001) -> bool:
         """Check if the candle is a doji (very small body)."""
-        return self.body_size <= (self.total_range * threshold)
+        return self.body_size <= threshold
 
     def __str__(self) -> str:
         """String representation of the candle."""

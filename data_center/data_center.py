@@ -9,10 +9,10 @@ from typing import Dict, List, Optional
 from algotrader.modules.archive.archive_manager import ArchiveManager
 from data_provider.exchange_collection.exchange import Exchange
 
-from data_center.jobs.technical_indicator import TechnicalIndicator
+from data_center.jobs.technical_indicator import DataCenterIndicator
 from data_center.jobs.technical_indicators.ema import ExponentialMovingAverage
 from data_center.jobs.technical_indicators.sma import SimpleMovingAverage
-from managers.websocket_manager import WebsocketManager
+from modules.websocket import WebsocketManager
 from models.data_models.candle import Candle
 from models.time_models import Interval
 from utils.singleton_metaclass.singleton import Singleton
@@ -22,10 +22,11 @@ class DataCenter(metaclass=Singleton):
     """Central data management system for algorithmic trading."""
     
     def __init__(self):
-        self.exchange: Exchange = ServiceManager.get_service("exchange")
-        self.logger: logging.Logger = ServiceManager.get_service("logger")
-        self.config: configparser.ConfigParser = ServiceManager.get_service("config")
-        self.archiver: ArchiveManager = ServiceManager.get_service("archiver")
+        from utils.dependency_injection_container import get
+        self.exchange: Exchange = get(Exchange)
+        self.logger: logging.Logger = get(logging.Logger)
+        self.config: configparser.ConfigParser = get(configparser.ConfigParser)
+        self.archiver: ArchiveManager = get(ArchiveManager)
 
         self.__run_forever__: bool = True
         self.__backfill__: bool = True
@@ -222,22 +223,37 @@ class DataCenter(metaclass=Singleton):
 
             self.__check_duplicate__(archived_data)
 
+            # Start from the earliest archived data timestamp
+            if archived_data:
+                earliest_archived = datetime.datetime.fromtimestamp(archived_data[0].timestamp / 1000)
+                current_datetime = min(current_datetime, earliest_archived)
+
             while current_datetime < end_datetime and index < total_length:
                 candle = archived_data[index]  # current candle
                 candle_datetime = datetime.datetime.fromtimestamp(candle.timestamp / 1000)
 
-                if candle_datetime == current_datetime:  # then we have the data
-                    self.symbols[symbol].append(candle)
-                    current_datetime += time_diff
-                else:  # then we need to backfill
-                    self.logger.debug(f"Candle timestamp {candle.timestamp}")
-                    lost_data = self.backfill(symbol, current_datetime, candle_datetime, self.__time_frame__)
-                    self.symbols[symbol].extend(lost_data)
-                    current_datetime = candle_datetime + time_diff
+                # Check if we need to backfill before this candle
+                if candle_datetime > current_datetime:
+                    # Backfill from current_datetime to candle_datetime (exclusive)
+                    backfill_end = candle_datetime - time_diff
+                    if current_datetime <= backfill_end:
+                        self.logger.debug(f"Back-filling {symbol} from {current_datetime} to {backfill_end}")
+                        lost_data = self.backfill(symbol, current_datetime, backfill_end, self.__time_frame__)
+                        self.symbols[symbol].extend(lost_data)
+                    
+                    # Move current_datetime to the candle's timestamp
+                    current_datetime = candle_datetime
+
+                # Add the current candle
+                self.symbols[symbol].append(candle)
+                
+                # Move to next expected timestamp
+                current_datetime += time_diff
                 index += 1
 
-            if current_datetime < end_datetime:  # we need to backfill until we reach the end of the data
-                # to complete till the current time
+            # Backfill any remaining time until current time
+            if current_datetime < end_datetime:
+                self.logger.debug(f"Final back-filling {symbol} from {current_datetime} to {end_datetime}")
                 lost_data = self.backfill(symbol, current_datetime, end_datetime, self.__time_frame__)
                 self.symbols[symbol].extend(lost_data)
                 
@@ -318,12 +334,12 @@ class DataCenter(metaclass=Singleton):
         try:
             for indicator_code in self.indicator_codes:
                 for symbol in self.symbols.keys():
-                    indicator = TechnicalIndicator.get_instance(symbol, indicator_code)
+                    indicator = DataCenterIndicator.get_instance(symbol, indicator_code)
                     self.__start_calculating_indicator__(indicator, symbol)
         except Exception as e:
             self.logger.error(f"Failed to start calculating indicators: {e}")
 
-    def __start_calculating_indicator__(self, indicator: TechnicalIndicator, symbol: str) -> None:
+    def __start_calculating_indicator__(self, indicator: DataCenterIndicator, symbol: str) -> None:
         """Start calculating a specific indicator for a symbol."""
         try:
             for index, candle in enumerate(self.symbols[symbol]):
@@ -335,7 +351,7 @@ class DataCenter(metaclass=Singleton):
         """Calculate indicators for a new candle."""
         try:
             for indicator_code in self.indicator_codes:
-                indicator: TechnicalIndicator = TechnicalIndicator.get_instance(candle.symbol, indicator_code)
+                indicator: DataCenterIndicator = DataCenterIndicator.get_instance(candle.symbol, indicator_code)
                 indicator.calculate(candle)
                 indicator.print()
         except Exception as e:

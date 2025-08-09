@@ -1,7 +1,7 @@
 """
 Service Initializer
 
-Handles initialization and shutdown of core application services using the DI container.
+Handles initialization and shutdown of core application services using the dependency injection container.
 """
 
 import configparser
@@ -9,9 +9,9 @@ import logging
 from contextlib import asynccontextmanager
 
 from modules.archive.archive_manager import ArchiveManager
-from modules.config.async_config_manager import AsyncConfigManager
-from modules.log.log_manager import AsyncLogManager
-from utils.di_container import get_container, register, register_singleton
+from modules.config.config_manager import ConfigManager
+from modules.log.log_manager import LogManager
+from utils.dependency_injection_container import get_container, register, register_singleton
 
 
 class ServiceInitializer:
@@ -21,20 +21,20 @@ class ServiceInitializer:
     async def initialize_logger() -> None:
         """Initialize the logger service."""
         # Get config first
-        config = await AsyncConfigManager.get_config()
+        config = await ConfigManager.get_config()
         
-        # Get logger from AsyncLogManager
-        logger = await AsyncLogManager.get_logger(config)
+        # Get logger from LogManager
+        logger = await LogManager.get_logger(config)
         register(logging.Logger, logger)
     
     @staticmethod
     async def initialize_config() -> None:
         """Initialize the configuration service."""
-        # Register the AsyncConfigManager as a singleton
-        register_singleton(AsyncConfigManager, AsyncConfigManager)
+        # Register the ConfigManager as a singleton
+        register_singleton(ConfigManager, ConfigManager)
         
         # Also register the configparser.ConfigParser instance
-        config = await AsyncConfigManager.get_config()
+        config = await ConfigManager.get_config()
         register(configparser.ConfigParser, config)
     
     @staticmethod

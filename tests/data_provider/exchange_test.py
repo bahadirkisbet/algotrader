@@ -8,7 +8,7 @@ from data_provider.exchange_collection.exchange_factory import (
     Interval,
 )
 
-from managers.service_manager import ServiceManager
+
 
 
 class TestExchangeBase(unittest.TestCase):
@@ -17,11 +17,15 @@ class TestExchangeBase(unittest.TestCase):
 
     @staticmethod
     def prepare_config_and_logger():
-        ServiceManager.initialize_config()
-        ServiceManager.initialize_logger()
-        config = ServiceManager.get_service("config")
+        from utils.service_initializer import initialize_services
+        import asyncio
+        asyncio.run(initialize_services())
+        from utils.dependency_injection_container import get
+        import configparser
+        import logging
+        config = get(configparser.ConfigParser)
         config.read("../../config.ini")
-        logger = ServiceManager.get_service("logger")
+        logger = get(logging.Logger)
         return config, logger
 
     def test_product_list(self):

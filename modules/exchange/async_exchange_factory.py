@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Optional, Type
 
 from data_provider.exchange_collection.async_binance_exchange import AsyncBinanceExchange
-from data_provider.exchange_collection.async_exchange import AsyncExchange
+from modules.exchange.exchange_interface import ExchangeInterface
 
 from models.exchange_type import ExchangeType
 
@@ -10,7 +10,7 @@ from models.exchange_type import ExchangeType
 class AsyncExchangeFactory:
     """Factory for creating async exchange instances."""
 
-    __exchanges__: Dict[str, Type[AsyncExchange]] = {}
+    __exchanges__: Dict[str, Type[ExchangeInterface]] = {}
     __logger__: Optional[logging.Logger] = None
 
     @classmethod
@@ -28,7 +28,7 @@ class AsyncExchangeFactory:
         }
 
     @classmethod
-    async def create(cls, exchange_code: str, exchange_type: ExchangeType) -> AsyncExchange:
+    async def create(cls, exchange_code: str, exchange_type: ExchangeType) -> ExchangeInterface:
         """Create an async exchange instance."""
         try:
             if exchange_code not in cls.__exchanges__:
@@ -61,7 +61,7 @@ class AsyncExchangeFactory:
         return exchange_code in cls.__exchanges__
 
     @classmethod
-    def register_exchange(cls, exchange_code: str, exchange_class: Type[AsyncExchange]):
+    def register_exchange(cls, exchange_code: str, exchange_class: Type[ExchangeInterface]):
         """Register a new exchange implementation."""
         cls.__exchanges__[exchange_code] = exchange_class
         if cls.__logger__:

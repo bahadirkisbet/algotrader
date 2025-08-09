@@ -6,45 +6,45 @@ from typing import Any, Dict, Optional
 from .config_validator import ConfigValidator
 
 
-class AsyncConfigManager:
-    """Async configuration manager with validation and caching."""
+class ConfigManager:
+    """Configuration manager with validation and caching."""
 
-    __config__: Optional[configparser.ConfigParser] = None
-    __config_file__: str = "config.ini"
-    __lock__ = asyncio.Lock()
+    _config: Optional[configparser.ConfigParser] = None
+    _config_file: str = "config.ini"
+    _lock = asyncio.Lock()
 
     @classmethod
     async def get_config(cls) -> configparser.ConfigParser:
         """Get the configuration, loading it asynchronously if needed."""
-        if cls.__config__ is None:
-            async with cls.__lock__:
-                if cls.__config__ is None:
-                    await cls.__load_config__()
-        return cls.__config__
+        if cls._config is None:
+            async with cls._lock:
+                if cls._config is None:
+                    await cls._load_config()
+        return cls._config
 
     @classmethod
     async def reload_config(cls) -> configparser.ConfigParser:
         """Reload the configuration from file."""
-        async with cls.__lock__:
-            cls.__config__ = None
-            await cls.__load_config__()
-        return cls.__config__
+        async with cls._lock:
+            cls._config = None
+            await cls._load_config()
+        return cls._config
 
     @classmethod
-    async def __load_config__(cls) -> None:
+    async def _load_config(cls) -> None:
         """Load configuration from file with validation."""
         try:
-            if not os.path.exists(cls.__config_file__):
-                raise FileNotFoundError(f"Configuration file '{cls.__config_file__}' not found")
+            if not os.path.exists(cls._config_file):
+                raise FileNotFoundError(f"Configuration file '{cls._config_file}' not found")
 
             config = configparser.ConfigParser()
-            config.read(cls.__config_file__)
+            config.read(cls._config_file)
 
             # Validate and apply defaults
             ConfigValidator.validate_config(config)
             ConfigValidator.apply_defaults(config)
 
-            cls.__config__ = config
+            cls._config = config
 
         except Exception as e:
             raise ValueError(f"Failed to load configuration: {e}")
@@ -101,7 +101,7 @@ class AsyncConfigManager:
 
     @classmethod
     async def validate_current_config(cls) -> Dict[str, Any]:
-        """Validate the current configuration."""
+        """Validate the current configuration and return validation results."""
         config = await cls.get_config()
         return ConfigValidator.validate_config(config)
 
@@ -113,9 +113,9 @@ class AsyncConfigManager:
     @classmethod
     def set_config_file(cls, file_path: str) -> None:
         """Set the configuration file path."""
-        cls.__config_file__ = file_path
+        cls._config_file = file_path
 
     @classmethod
     def get_config_file_path(cls) -> str:
         """Get the current configuration file path."""
-        return cls.__config_file__ 
+        return cls._config_file 
