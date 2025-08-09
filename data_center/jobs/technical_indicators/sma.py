@@ -1,6 +1,6 @@
 from typing import Callable, Optional
 
-from common_models.data_models.candle import Candle
+from models.data_models.candle import Candle
 from data_center.jobs.technical_indicator import TechnicalIndicator
 
 
@@ -27,6 +27,7 @@ class SimpleMovingAverage(TechnicalIndicator):
             self.__total_sum__ -= previous_candle.close
         else:  # it does not reach to the value to calculate the average properly
             self.__total_count__ += 1
+
         self.__total_sum__ += candle.close
         current_value = self.__total_sum__ / self.period if self.__total_count__ >= self.period else None
         self.data.append([candle.timestamp, current_value])

@@ -2,15 +2,15 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Callable, Optional
 
-from common_models.data_models.candle import Candle
-from managers.service_manager import ServiceManager
+from models.data_models.candle import Candle
+from utils.di_container import get
 
 
 class TechnicalIndicator(ABC):
     __registry__ = {}
 
     def __init__(self, symbol: str, request_callback: Callable):
-        self.logger: logging.Logger = ServiceManager.get_service("logger")
+        self.logger: logging.Logger = get(logging.Logger)
 
         self.symbol: str = symbol
         self.request_callback: Callable = request_callback

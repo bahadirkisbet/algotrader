@@ -11,7 +11,7 @@
 
 #### Refactoring
 - [X] Separate exchange specific methods into the abstract class and leave base class as an interface (with correct naming)
-- [-] Move all initialization process to a method from constructor NOTE: DON'T DO THIS, IT'S NOT A GOOD PRACTICE
+- [ ] ~~Move all initialization process to a method from constructor~~ NOTE: DON'T DO THIS, IT'S NOT A GOOD PRACTICE
 
 #### Feature
 - [X] Add scan on historical values and retrieve missing ranges
@@ -38,7 +38,9 @@
     - [ ] Technical Indicators
         - [ ] There should be at least 5 indicators
           - [X] SMA
+            - [ ] Test
           - [X] EMA
+            - [ ] Test 
           - [ ] RSI
           - [ ] VWAP
           - [ ] MACD

@@ -1,6 +1,6 @@
 from typing import Optional, Callable
 
-from common_models.data_models.candle import Candle
+from models.data_models.candle import Candle
 from data_center.jobs.technical_indicator import TechnicalIndicator
 
 
