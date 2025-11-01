@@ -1,3 +1,9 @@
+"""Configuration manager with validation and caching.
+
+This module provides a configuration manager with validation and caching.
+It is used to load and validate the configuration file, and to get the configuration values.
+"""
+
 import asyncio
 import configparser
 import os
@@ -46,8 +52,8 @@ class ConfigManager:
 
             cls._config = config
 
-        except Exception as e:
-            raise ValueError(f"Failed to load configuration: {e}")
+        except (FileNotFoundError, configparser.Error, ValueError) as e:
+            raise ValueError(f"Failed to load configuration: {e}") from e
 
     @classmethod
     async def get_value(cls, section: str, option: str, fallback: Any = None) -> Any:
@@ -108,7 +114,10 @@ class ConfigManager:
     @classmethod
     async def create_sample_config(cls, output_file: str = "config_sample.ini") -> str:
         """Create a sample configuration file."""
-        return ConfigValidator.create_sample_config(output_file)
+        content = ConfigValidator.create_sample_config()
+        with open(output_file, "w", encoding="utf-8") as f:
+            f.write(content)
+        return content
 
     @classmethod
     def set_config_file(cls, file_path: str) -> None:
@@ -118,4 +127,4 @@ class ConfigManager:
     @classmethod
     def get_config_file_path(cls) -> str:
         """Get the current configuration file path."""
-        return cls._config_file 
+        return cls._config_file
