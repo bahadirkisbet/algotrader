@@ -160,8 +160,3 @@ class ArchiveManager:
                 return "1d"
             case _:
                 return "1m"  # Default
-
-    async def shutdown(self) -> None:
-        """Shutdown the archive manager."""
-        # No specific cleanup needed for file operations
-        pass
