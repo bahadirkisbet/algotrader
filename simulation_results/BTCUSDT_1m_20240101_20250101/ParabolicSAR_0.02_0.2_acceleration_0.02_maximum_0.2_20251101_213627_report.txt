@@ -1,0 +1,53 @@
+================================================================================
+BACKTEST PERFORMANCE REPORT
+================================================================================
+
+CONFIGURATION
+--------------------------------------------------------------------------------
+Strategy:           ParabolicSAR_0.02_0.2
+Symbol:             BTCUSDT
+Exchange:           BINANCE
+Interval:           1
+Period:             2024-01-01 to 2025-01-01
+Duration:           366 days
+Initial Capital:    $10,000.00
+Commission Rate:    0.05%
+
+PERFORMANCE SUMMARY
+--------------------------------------------------------------------------------
+Total Return:       -2.00%
+Annualized Return:  -1.99%
+Total P&L:          $-199.69
+Final Equity:       $9,800.31
+Peak Equity:        $14,153.74
+
+RISK METRICS
+--------------------------------------------------------------------------------
+Max Drawdown:       33.22%
+DD Duration:        38 days
+Volatility:         0.77%
+Sharpe Ratio:       -2.607
+Sortino Ratio:      -2.384
+Calmar Ratio:       -0.060
+
+TRADE STATISTICS
+--------------------------------------------------------------------------------
+Total Orders:       428
+Closed Trades:      214
+Winning Trades:     86
+Losing Trades:      128
+Win Rate:           40.19%
+Profit Factor:      0.99
+Avg Win:            $+220.42
+Avg Loss:           $-149.66
+Largest Win:        $+1,127.66
+Largest Loss:       $-972.12
+Expectancy:         $-0.93
+
+COSTS
+--------------------------------------------------------------------------------
+Total Commission:   $2,307.98
+Total Slippage:     $0.00
+Commission % of P&L: 1155.77%
+
+================================================================================

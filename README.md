@@ -1,89 +1,261 @@
 # AlgoTrader
 
+A comprehensive algorithmic trading application built in Python with support for multiple cryptocurrency exchanges, technical indicators, and machine learning models.
 
+## Features
+
+- **Multi-Exchange Support**: Currently supports Binance with extensible architecture for other exchanges
+- **Historical Data Management**: Automated data ingestion from Binance Vision API with archiving capabilities
+- **Technical Indicators**: SMA, EMA, and extensible framework for additional indicators
+- **Backtesting Engine**: Simulation engine for strategy testing
+- **Risk Management**: Built-in risk management framework
+- **Asynchronous Architecture**: High-performance async/await implementation
+- **Data Archiving**: Efficient gzipped JSON storage with ArchiveManager
+- **WebSocket Support**: Real-time market data streaming
+
+## Installation
+
+### Prerequisites
+
+- Python 3.10 or higher
+- pip package manager
+
+### Quick Start
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd algotrader
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   # Install core dependencies
+   pip install -e .
+
+   # Install development dependencies (optional)
+   pip install -e .[dev]
+   ```
+
+3. **Configure the application**
+   ```bash
+   # Copy and edit the configuration file
+   cp config.ini.example config.ini
+   # Edit config.ini with your settings
+   ```
+
+## Usage
+
+### Available Commands
+
+The project uses Taskipy for easy command execution:
+
+```bash
+# Development
+task dev                    # Run in development mode
+task prod                   # Run in production mode
+
+# Data Ingestion
+task ingest_binance        # Download and archive Binance historical data
+
+# Testing
+task test                  # Run all tests
+task test_all             # Run tests with verbose output
+task test_candle          # Run candle model tests
+task test_ema             # Run EMA indicator tests
+task test_sma             # Run SMA indicator tests
+task test_simulation      # Run simulation engine tests
+task cov                  # Run tests with coverage report
+
+# Code Quality
+task lint                 # Run Ruff linter
+task fmt                  # Format code with Black and isort
+task fmt_check            # Check code formatting
+task typecheck            # Run MyPy type checker
+
+# Maintenance
+task clean                # Clean Python cache files
+task clean_all            # Clean all temporary and cache files
+task deps_dev             # Install development dependencies
+```
+
+### Data Ingestion Example
+
+Download and archive historical BTCUSDT 5-minute candle data:
+
+```bash
+task ingest_binance
+```
+
+This will:
+
+1. Download monthly data files from Binance Vision API
+2. Process and validate the data
+3. Archive the data using the ArchiveManager
+4. Clean up temporary files
+
+### Programmatic Usage
+
+```python
+from modules.archive.archive_manager import ArchiveManager
+from models.data_models.candle import Candle
+
+# Initialize archive manager
+archive = ArchiveManager()
+
+# Save candles
+await archive.archive_candles("BTCUSDT", candles_list, "5m")
+
+# Retrieve archived data
+candles = await archive.get_candles("BTCUSDT", Interval.FIVE_MINUTES)
+```
+
+## Project Structure
+
+```
+algotrader/
+├── algorithmic_trader.py      # Main application entry point
+├── startup.py                 # Application startup and service injection
+├── config.ini                 # Configuration file
+├── pyproject.toml            # Project configuration and dependencies
+├── modules/                   # Core application modules
+│   ├── archive/              # Data archiving and retrieval
+│   ├── config/               # Configuration management
+│   ├── exchange/             # Exchange integrations (REST & WebSocket)
+│   ├── strategy/             # Simple stateless indicators
+│   └── websocket/            # WebSocket management
+├── domains/                   # Domain models and business logic
+│   ├── market_data/          # Market data models
+│   ├── risk_management/      # Risk management framework
+│   ├── strategy_engine/      # Advanced strategy implementations
+│   └── trading/              # Trading operations and exchanges
+├── simulations/               # Backtesting framework (TradingView-style)
+│   ├── engine.py             # Main simulation engine
+│   ├── portfolio.py          # Portfolio management
+│   ├── performance.py        # Performance metrics
+│   └── config.py             # Simulation configuration
+├── data_center/               # Data management and indicators
+│   ├── data_center.py        # Core data center
+│   └── jobs/                 # Background jobs
+│       └── technical_indicators/  # Stateful real-time indicators
+├── models/                    # Data models
+│   ├── data_models/          # Core data structures (Candle, etc.)
+│   └── time_models.py        # Time and interval models
+├── scripts/                   # Utility scripts
+│   └── binance_data_ingestor.py  # Bulk historical data download
+├── tests/                     # Test suite
+└── utils/                     # Utility functions and helpers
+```
+
+## Configuration
+
+The application uses `config.ini` for configuration. Key sections include:
+
+- **ARCHIVE**: Archive folder and encoding settings
+- **EXCHANGE**: Exchange-specific configurations
+- **LOGGING**: Log level and output settings
+- **WEBSOCKET**: WebSocket connection settings
+
+## Development
+
+### Code Quality
+
+The project enforces high code quality standards:
+
+- **Black**: Code formatting
+- **Ruff**: Fast Python linter
+- **MyPy**: Static type checking
+- **isort**: Import sorting
+
+### Running Tests
+
+```bash
+# Run all tests
+task test
+
+# Run specific test categories
+task test_candle
+task test_ema
+task test_simulation
+
+# Run with coverage
+task cov
+```
+
+### Code Formatting
+
+```bash
+# Format code
+task fmt
+
+# Check formatting
+task fmt_check
+```
+
+## System Overview
+
+### Core Components
+
+1. **Exchange Module** (`modules/exchange/`)
+
+   - SOLID-compliant exchange integrations
+   - Automatic Binance Vision support for bulk historical data
+   - Separate REST and WebSocket implementations
+   - Extensible for additional exchanges
+
+2. **Simulation Framework** (`simulations/`)
+
+   - Complete TradingView-style backtesting engine
+   - Portfolio management with position tracking
+   - 20+ performance metrics (Sharpe, Sortino, Calmar, etc.)
+   - Automated report generation with charts
+   - Strategy functions for flexible testing
+
+3. **Technical Indicators**
+
+   - **Stateless** (`modules/strategy/technical_indicators.py`): Batch calculation on candle lists
+   - **Stateful** (`data_center/jobs/technical_indicators/`): Real-time streaming with state management
+   - Implementations: SMA, EMA, Parabolic SAR, RSI, Bollinger Bands
+
+4. **Data Management**
+   - Archive manager for compressed historical data storage
+   - Data ingestion scripts for bulk downloads
+   - Gap detection and backfilling
 
 ### TODO
-- [ ] Add more exchanges
-- [X] Normalize data coming from exchanges
-  - [X] When you make call to exchange, you get data in different formats, find the common structure
-  - [X] Normalize data to common structure
-- [ ] Implement global config mechanism (link to config file)
 
-#### Refactoring
-- [X] Separate exchange specific methods into the abstract class and leave base class as an interface (with correct naming)
-- [ ] ~~Move all initialization process to a method from constructor~~ NOTE: DON'T DO THIS, IT'S NOT A GOOD PRACTICE
+#### Completed ✅
 
-#### Feature
-- [X] Add scan on historical values and retrieve missing ranges
-- [X] Backfill those ranges
-- [X] Create correct program flow
-  - [ ] It is partly done. 
-- [ ] Implement decision maker algorithm
-  - [ ] There could be several models, which are many. Implement those
-    - [ ] Decision Maker
-      - [ ] There should be at least 5 models
-        - [ ] ARIMA
-        - [ ] LSTM
-        - [ ] GPR
-        - [ ] Random Forest
-        - [ ] XGBoost
-  - [ ] Create scoring mechanism
-  - [ ] Create scoring feedback mechanism by the success rates of the trades
-- [ ] Create or use a library for binance client
-  - [ ] Wrap this library to provide more functionality
-- [ ] Implement mock tester - ! Important ! {This is going to be backtester} 
-- [X] Implement archiving mechanism
-- [ ] Implement technical indicators
-  - [ ] Implement Jobs mechanism
-    - [ ] Technical Indicators
-        - [ ] There should be at least 5 indicators
-          - [X] SMA
-            - [ ] Test
-          - [X] EMA
-            - [ ] Test 
-          - [ ] RSI
-          - [ ] VWAP
-          - [ ] MACD
-  - [ ] Search for any other method that can be useful for prediction of price
-  - [ ] Design an UI
-    - [ ] Profit and loss analysis
-    - [ ] Current price, graph, indicators and position
-    - [ ] History of trades
-    - [ ] Custom buy/sell orders over the current position
-    - [ ] Custom buy/sell orders over the current price
-    - [ ] Login Page (possibly keycloak)
-  - [ ] Design REST API backend
-    - [ ] Profit and loss statistics
-    - [ ] Current price, graph, indicators and position
-    - [ ] History of trades
-    - [ ] Custom buy/sell orders over the current position
-    - [ ] Custom buy/sell orders over the current price
-    - [ ] Websocket
-    
-#### Bug
-- [X] It should make roughly 2900 calls for btcusdt when it's back-filling, but it makes 5900 calls. Find the reason and fix it
-- [X] The program does not terminate. Find the bug and solve it. It is probably related to the one of the threads.
-- [ ] There is a back-filling from future to past. Find the reason and fix it
-  - `Back-filling BTCUSDT from 2021-09-29 17:49:00 to 2021-09-29 17:48:00 with interval 1...`
+- [x] Exchange module refactoring (SOLID principles)
+- [x] Binance Vision integration
+- [x] Complete backtesting framework
+- [x] Technical indicators (SMA, EMA, Parabolic SAR)
+- [x] Performance metrics and reporting
+- [x] Code cleanup and consolidation
 
-### OpenAI Suggestions
+#### Planned 📋
 
-Sure, here are some commonly used models in finance and stock trading:
+- [ ] Add more exchange support (Coinbase, Kraken, etc.)
+- [ ] Implement ML-based strategies (LSTM, XGBoost, etc.)
+- [ ] Real-time trading execution
+- [ ] Risk management enhancements
+- [ ] Web UI for strategy monitoring
+- [ ] REST API for remote access
 
-1. Autoregressive Integrated Moving Average (ARIMA): This is a statistical model that uses time series data to make predictions. It has been widely used in finance for predicting stock prices, exchange rates, and other economic indicators. ARIMA models are good for predicting trends and patterns in data over time, but may struggle with sudden changes in data or noisy data.
-2. Long Short-Term Memory (LSTM): This is a type of Recurrent Neural Network (RNN) that is good for modeling sequences of data. LSTMs can learn long-term dependencies in time series data and can be used for stock price prediction, portfolio optimization, and risk management. However, LSTMs may require a lot of data and computational resources to train.
-3. Gaussian Process Regression (GPR): This is a non-parametric model that can be used for time series prediction, volatility modeling, and option pricing. GPR models can capture complex patterns in data and can be more flexible than parametric models like ARIMA. However, they may also be computationally expensive and may require careful tuning of hyperparameters.
-4. Random Forests: This is a popular machine learning algorithm that can be used for stock price prediction and portfolio optimization. Random forests are good at handling noisy data and can capture non-linear relationships between features and target variables. However, they may struggle with over fitting if the model is too complex.
-5. XGBoost: This is a gradient boosting algorithm that is widely used in finance and stock trading. It is known for its accuracy and speed, and has been used for portfolio optimization, risk management, and fraud detection. XGBoost models can handle missing data and can capture complex patterns in data, but may require careful tuning of hyperparameters and regularization to avoid over fitting.
+## Contributing
 
-It's important to note that these models should be used as tools to aid decision-making, and not as a substitute for expert knowledge and judgment. Financial markets can be unpredictable and subject to sudden changes, so it's important to carefully evaluate the risks and limitations of any model before using it for trading decisions.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and quality checks: `task test && task lint && task fmt_check`
+5. Submit a pull request
 
-The choice of model(s) to use in a trading bot will depend on the specific trading strategy and the available data. In general, it may be beneficial to use a combination of multiple models with some scoring to leverage the strengths of each model and reduce the risk of relying on a single model.
+## License
 
-For example, one possible approach would be to use a time-series forecasting model like ARIMA or LSTM to predict future prices, and then use a machine learning model like Random Forest or XGBoost to classify whether to buy, hold, or sell based on the predicted prices and other features like volume, news sentiment, and technical indicators.
+This project is licensed under the MIT License.
 
-Another possible approach would be to use a Gaussian Process Regression (GPR) model to model the underlying trend and volatility of the stock, and then use a reinforcement learning algorithm like Deep Q-Learning to learn the optimal trading strategy based on the predicted trend and volatility.
+## Disclaimer
 
-It's also important to note that the performance of a trading bot will depend not only on the choice of model(s) but also on factors like the quality and timeliness of the data, the accuracy of the trading strategy, and the execution speed of the bot.
-
-In practice, it may be beneficial to start with a simple trading strategy and a basic model like ARIMA or Random Forest, and then gradually improve the strategy and model as more data and resources become available. It's also important to regularly evaluate the performance of the bot and adjust the strategy and model as needed to adapt to changing market conditions.
+This software is for educational and research purposes only. Trading cryptocurrencies involves substantial risk and may result in the loss of your invested capital. You should carefully consider whether trading is suitable for you in light of your financial condition, investment objectives, and risk tolerance.

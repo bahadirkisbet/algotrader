@@ -2,16 +2,16 @@ import configparser
 import logging
 from typing import List
 
-from strategy.strategy import Strategy
-
+from modules.strategy.strategy import Strategy
 from utils.dependency_injection_container import get
 from utils.singleton_metaclass.singleton import Singleton
 
 
 class TradingStrategyManager(metaclass=Singleton):
     """Central manager for all trading strategies."""
-    
+
     strategies: List[Strategy] = []
+    is_running = False
 
     def __init__(self):
         self.logger: logging.Logger = get(logging.Logger)
@@ -44,10 +44,12 @@ class TradingStrategyManager(metaclass=Singleton):
         """Run backtesting for all strategies."""
         pass
 
-    def start_all_strategies(self):
+    async def start(self):
         """Start all registered strategies."""
-        pass
+        self.is_running = True
+        self.logger.info("Strategy manager started")
 
-    def stop_all_strategies(self):
+    async def stop(self):
         """Stop all registered strategies."""
-        pass
+        self.is_running = False
+        self.logger.info("Strategy manager stopped")

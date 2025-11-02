@@ -1,14 +1,12 @@
 import datetime
 import unittest
 
-from data_provider.exchange_collection.exchange_factory import (
-    Exchange,
-    ExchangeFactory,
-    ExchangeType,
-    Interval,
-)
-
-
+from models.exchange_type import ExchangeType
+from models.time_models import Interval
+from modules.exchange.exchange import Exchange
+from modules.exchange.exchange_factory import ExchangeFactory
+from utils.dependency_injection_container import get
+from utils.service_initializer import initialize_services
 
 
 class TestExchangeBase(unittest.TestCase):
@@ -17,12 +15,12 @@ class TestExchangeBase(unittest.TestCase):
 
     @staticmethod
     def prepare_config_and_logger():
-        from utils.service_initializer import initialize_services
         import asyncio
+
         asyncio.run(initialize_services())
-        from utils.dependency_injection_container import get
         import configparser
         import logging
+
         config = get(configparser.ConfigParser)
         config.read("../../config.ini")
         logger = get(logging.Logger)
@@ -30,8 +28,8 @@ class TestExchangeBase(unittest.TestCase):
 
     def test_product_list(self):
         exchange: Exchange = ExchangeFactory.create(
-            TestExchangeBase.exchange_code,
-            TestExchangeBase.exchange_type)
+            TestExchangeBase.exchange_code, TestExchangeBase.exchange_type
+        )
 
         product_list = exchange.fetch_product_list()
         self.assertIsNotNone(product_list, "Product list is empty")
@@ -39,8 +37,8 @@ class TestExchangeBase(unittest.TestCase):
 
     def test_candle(self):
         exchange: Exchange = ExchangeFactory.create(
-            TestExchangeBase.exchange_code,
-            TestExchangeBase.exchange_type)
+            TestExchangeBase.exchange_code, TestExchangeBase.exchange_type
+        )
         symbol = "BTCUSDT"
         start_date = datetime.datetime(2021, 1, 1)
         end_date = datetime.datetime(2022, 1, 1)
