@@ -8,7 +8,6 @@ to fetch historical data instead of maintaining state.
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, List, Optional
 
-from modules.config.config_manager import ConfigManager
 from modules.data.candle import Candle
 from modules.log import LogManager
 
@@ -20,7 +19,7 @@ class BaseIndicator(ABC):
     """Abstract base class for all technical indicators."""
 
     def __init__(self):
-        self.logger = LogManager.get_logger(ConfigManager.get_config())
+        self.logger = LogManager.get_logger()
 
 
 class Indicator(BaseIndicator):

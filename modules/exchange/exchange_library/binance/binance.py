@@ -139,7 +139,9 @@ class BinanceExchange(Exchange):
                 symbols = [s["symbol"] for s in symbols_data]
 
                 if self.logger:
-                    self.logger.info("Fetched %s trading symbols from Binance", len(symbols))
+                    self.logger.info(
+                        "Fetched %s trading symbols from Binance", len(symbols)
+                    )
 
                 return symbols
 
@@ -223,13 +225,16 @@ class BinanceExchange(Exchange):
                         time_range_days,
                     )
                 try:
-                    candles = await self._fetch_from_vision(symbol, start_date, end_date, interval)
+                    candles = await self._fetch_from_vision(
+                        symbol, start_date, end_date, interval
+                    )
                     if candles:
                         return candles
                 except Exception as e:
                     if self.logger:
                         self.logger.warning(
-                            "Binance Vision fetch failed, falling back to REST API: %s", e
+                            "Binance Vision fetch failed, falling back to REST API: %s",
+                            e,
                         )
 
             # Fall back to REST API
@@ -239,7 +244,9 @@ class BinanceExchange(Exchange):
 
         except Exception as e:
             if self.logger:
-                self.logger.error("Failed to fetch historical data for %s: %s", symbol, e)
+                self.logger.error(
+                    "Failed to fetch historical data for %s: %s", symbol, e
+                )
             raise
 
     async def _fetch_from_api(
@@ -279,7 +286,9 @@ class BinanceExchange(Exchange):
                 candles.extend(result)
 
         if self.logger:
-            self.logger.info("Fetched %s historical candles for %s", len(candles), symbol)
+            self.logger.info(
+                "Fetched %s historical candles for %s", len(candles), symbol
+            )
 
         return candles
 
@@ -310,7 +319,9 @@ class BinanceExchange(Exchange):
         candles = []
 
         # Generate list of files to download
-        file_urls = self._generate_vision_urls(symbol, start_date, end_date, interval_str)
+        file_urls = self._generate_vision_urls(
+            symbol, start_date, end_date, interval_str
+        )
 
         # Download and process files concurrently
         tasks = [self._download_and_parse_vision_file(url, symbol) for url in file_urls]
@@ -329,14 +340,18 @@ class BinanceExchange(Exchange):
         candles = [
             c
             for c in candles
-            if start_date.timestamp() * 1000 <= c.timestamp <= end_date.timestamp() * 1000
+            if start_date.timestamp() * 1000
+            <= c.timestamp
+            <= end_date.timestamp() * 1000
         ]
 
         # Sort by timestamp
         candles.sort(key=lambda x: x.timestamp)
 
         if self.logger:
-            self.logger.info("Fetched %s candles from Binance Vision for %s", len(candles), symbol)
+            self.logger.info(
+                "Fetched %s candles from Binance Vision for %s", len(candles), symbol
+            )
 
         return candles
 
@@ -384,13 +399,17 @@ class BinanceExchange(Exchange):
                 urls.append(url)
                 # Move to next month
                 if current_date.month == 12:
-                    current_date = current_date.replace(year=current_date.year + 1, month=1)
+                    current_date = current_date.replace(
+                        year=current_date.year + 1, month=1
+                    )
                 else:
                     current_date = current_date.replace(month=current_date.month + 1)
 
         return urls
 
-    async def _download_and_parse_vision_file(self, url: str, symbol: str) -> List[Candle]:
+    async def _download_and_parse_vision_file(
+        self, url: str, symbol: str
+    ) -> List[Candle]:
         """
         Download and parse a Binance Vision ZIP file.
 

@@ -4,7 +4,6 @@ Indicator Manager for managing and coordinating technical indicators.
 
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
-from modules.config.config_manager import ConfigManager
 from modules.data.candle import Candle
 from modules.indicator.indicator_factory import IndicatorFactory
 from modules.log import LogManager
@@ -29,7 +28,7 @@ class IndicatorManager:
             candle_request_callback: Callback to request historical candles
                 Signature: (symbol: str, index: int, reverse: bool) -> Optional[Candle]
         """
-        self.logger = LogManager.get_logger(ConfigManager.get_config())
+        self.logger = LogManager.get_logger()
         self.candle_request_callback = candle_request_callback
 
         # Registry: {symbol: {indicator_code: indicator_instance}}

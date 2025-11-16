@@ -11,7 +11,7 @@ import os
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
-from modules.config.config_manager import ConfigManager
+from modules.config.config_manager import get_config
 
 
 class LogManager:
@@ -20,33 +20,34 @@ class LogManager:
     _logger: Optional[logging.Logger] = None
 
     @classmethod
-    def get_logger(cls, config: ConfigManager) -> logging.Logger:
+    def get_logger(cls) -> logging.Logger:
         """Get logger instance."""
         if cls._logger is None:
-            cls._logger = cls.setup_logger(config)
+            cls._logger = cls.setup_logger()
         return cls._logger
 
     @classmethod
-    def setup_logger(cls, config: ConfigManager) -> logging.Logger:
+    def setup_logger(cls) -> logging.Logger:
         """Setup logger."""
+        # Get global config
+        config = get_config()
+        
         # Determine logger level from the config
-        logging_level = cls.get_logging_level(config)
+        logging_level = cls.get_logging_level()
 
         # Create logger
         logger: logging.Logger = logging.getLogger(__name__)
         logger.setLevel(logging_level)
 
         # Ensure log directory exists
-        log_file = config["DEFAULT"]["log_file"]
+        log_file = config.default.log_file
         log_dir = os.path.dirname(log_file)
         if log_dir and not os.path.exists(log_dir):
             os.makedirs(log_dir, exist_ok=True)
 
         # Create rotating file handler with proper configuration
-        max_bytes = int(
-            config.get("DEFAULT", "max_log_size", fallback=10 * 1024 * 1024)
-        )  # 10MB default
-        backup_count = int(config.get("DEFAULT", "log_backup_count", fallback=5))
+        max_bytes = config.default.max_log_size
+        backup_count = config.default.log_backup_count
 
         file_handler = RotatingFileHandler(
             log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
@@ -77,9 +78,10 @@ class LogManager:
         return logger
 
     @staticmethod
-    def get_logging_level(config: ConfigManager) -> int:
-        """Get logging level from config using if-elif for compatibility."""
-        log_level = config.get_value("DEFAULT", "log_level").lower()
+    def get_logging_level() -> int:
+        """Get logging level from config."""
+        config = get_config()
+        log_level = config.default.log_level.upper()
 
         return getattr(logging, log_level)
 

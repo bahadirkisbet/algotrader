@@ -13,7 +13,7 @@ class WebSocketManager:
 
     def __init__(self):
         self.logger: logging.Logger = get(logging.Logger)
-        self.websocket: Optional[websockets.WebSocketServerProtocol] = None
+        self.websocket: Optional = None
         self.is_connected = False
         self.reconnect_attempts = 0
         self.max_reconnect_attempts = 5

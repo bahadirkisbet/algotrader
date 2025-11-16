@@ -12,7 +12,6 @@ from typing import Callable, Dict, List, Optional
 from models.data_models.candle import Candle
 from models.time_models import Interval
 from modules.archive.archive_manager import ArchiveManager
-from modules.config.config_manager import ConfigManager
 from modules.exchange.exchange import Exchange
 from modules.exchange.exchange_factory import ExchangeFactory
 from modules.log import LogManager
@@ -28,7 +27,7 @@ class BackfillExchange:
 
     def __init__(self, config_file: str = "config.ini"):
         """Initialize backfill exchange."""
-        self.logger = LogManager.get_logger(ConfigManager.get_config())
+        self.logger = LogManager.get_logger()
         self.archive_manager = ArchiveManager(config_file)
         self.real_exchange: Optional[Exchange] = None
         self.candle_callbacks: List[Callable[[Candle], None]] = []

@@ -13,7 +13,7 @@ from typing import Dict, List, Optional
 from models.data_models.candle import Candle
 from models.time_models import Interval, frame_to_interval
 from modules.archive.archive_manager import ArchiveManager
-from modules.config.config_manager import ConfigManager
+from modules.config.config_manager import get_config
 from modules.data.candle import Candle as DataCandle
 from modules.exchange.backfill_exchange import BackfillExchange
 from modules.exchange.exchange import Exchange
@@ -36,14 +36,12 @@ class DataCenter:
 
     def __init__(self, config_file: str = "config.ini"):
         """Initialize the data center."""
-        self.config = ConfigManager.get_config()
-        self.logger = LogManager.get_logger(self.config)
+        self.config = get_config()
+        self.logger = LogManager.get_logger()
         self.archive_manager = ArchiveManager(config_file)
 
         # Mode detection: backfill if development_mode is true
-        self.is_backfill_mode = ConfigManager.get_boolean(
-            "DEFAULT", "development_mode", fallback=True
-        )
+        self.is_backfill_mode = self.config.default.development_mode
 
         # Exchange instances
         self.exchange: Optional[Exchange] = None
@@ -63,9 +61,7 @@ class DataCenter:
 
         # Symbol configuration
         self.symbols: List[str] = []
-        self.interval: Interval = frame_to_interval(
-            ConfigManager.get_value("EXCHANGE", "default_interval", fallback="1h")
-        )
+        self.interval: Interval = frame_to_interval(self.config.exchange.time_frame)
 
         # Indicator configurations - create all possible indicators
         self.indicator_configs = self._get_all_indicator_configs()
@@ -130,7 +126,7 @@ class DataCenter:
         self.backfill_exchange.register_candle_callback(self._on_candle_received)
 
         # Initialize real exchange for fetching if needed
-        exchange_code = ConfigManager.get_value("EXCHANGE", "exchange_code", fallback="BINANCE")
+        exchange_code = self.config.exchange.exchange_code
         self.exchange = await ExchangeFactory.create_exchange(exchange_code)
 
         self.logger.info("Backfill mode initialized")
@@ -139,7 +135,7 @@ class DataCenter:
         """Initialize production mode with real exchange and WebSocket."""
         self.logger.info("Initializing production mode...")
 
-        exchange_code = ConfigManager.get_value("EXCHANGE", "exchange_code", fallback="BINANCE")
+        exchange_code = self.config.exchange.exchange_code
         self.exchange = await ExchangeFactory.create_exchange(exchange_code)
 
         # Create and initialize WebSocket
@@ -192,7 +188,9 @@ class DataCenter:
                     indicator = self.indicator_manager.create_indicator(
                         indicator_type, symbol, **config_copy
                     )
-                    self.logger.debug("Created indicator %s for symbol %s", indicator.code, symbol)
+                    self.logger.debug(
+                        "Created indicator %s for symbol %s", indicator.code, symbol
+                    )
                 except Exception as e:
                     self.logger.error(
                         "Failed to create indicator %s for %s: %s",
@@ -248,7 +246,9 @@ class DataCenter:
             )
 
             # Start playback
-            await self.backfill_exchange.start_playback(symbol, self.interval, speed=100.0)
+            await self.backfill_exchange.start_playback(
+                symbol, self.interval, speed=100.0
+            )
 
     async def _start_production_mode(self) -> None:
         """Start production mode with WebSocket."""
@@ -350,10 +350,15 @@ class DataCenter:
             try:
                 value = indicator.calculate(candle)
                 if value is not None:
-                    self.logger.debug("Calculated %s for %s: %.8f", indicator_code, symbol, value)
+                    self.logger.debug(
+                        "Calculated %s for %s: %.8f", indicator_code, symbol, value
+                    )
             except Exception as e:
                 self.logger.error(
-                    "Error calculating indicator %s for %s: %s", indicator_code, symbol, e
+                    "Error calculating indicator %s for %s: %s",
+                    indicator_code,
+                    symbol,
+                    e,
                 )
 
     async def backfill(
@@ -441,7 +446,9 @@ class DataCenter:
         if not self.indicator_manager:
             return None
 
-        return self.indicator_manager.get_indicator_value(symbol, indicator_code, index, reverse)
+        return self.indicator_manager.get_indicator_value(
+            symbol, indicator_code, index, reverse
+        )
 
     def get_all_indicators(self, symbol: str) -> Dict[str, object]:
         """
