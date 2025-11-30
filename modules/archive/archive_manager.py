@@ -1,5 +1,4 @@
 import asyncio
-import configparser
 import gzip
 import json
 import os
@@ -12,24 +11,24 @@ from models.time_models import Interval
 class ArchiveManager:
     """Manages data archiving and retrieval operations."""
 
-    def __init__(self, config_file: str = "config.ini"):
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file)
-
-        self.archive_folder = self.config.get("ARCHIVE", "archive_folder", fallback=".cache")
-        self.default_encoding = self.config.get("ARCHIVE", "default_encoding", fallback="utf-8")
+    def __init__(self, archive_folder: str, default_encoding: str):
+        self.archive_folder = archive_folder
+        self.default_encoding = default_encoding
 
         # Create archive folder if it doesn't exist
         if not os.path.exists(self.archive_folder):
             os.mkdir(self.archive_folder)
 
     async def save(
-        self, exchange_code: str, symbol: str, data_type: str, data_frame: str, data: List[Candle]
+        self,
+        exchange_code: str,
+        symbol: str,
+        data_type: str,
+        data_frame: str,
+        data: List[Candle],
     ) -> None:
         """Save data to archive asynchronously."""
-        file_name = (
-            f"{self.archive_folder}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
-        )
+        file_name = f"{self.archive_folder}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
         json_dict = {
             "exchange_code": exchange_code,
             "symbol": symbol,
@@ -53,25 +52,30 @@ class ArchiveManager:
         self, exchange_code: str, symbol: str, data_type: str, data_frame: str
     ) -> List[Candle]:
         """Read data from archive asynchronously."""
-        file_name = (
-            f"{self.archive_folder}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
-        )
+        file_name = f"{self.archive_folder}/{exchange_code}_{data_type}_{symbol}_{data_frame}.json.gz"
 
         if not os.path.exists(file_name):
             return []
 
         # Use asyncio to run the file operation in a thread pool
-        return await asyncio.get_event_loop().run_in_executor(None, self.read_gzip_file, file_name)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, self.read_gzip_file, file_name
+        )
 
     def read_gzip_file(self, file_name: str) -> List[Candle]:
         """Read gzipped data from file (synchronous, runs in thread pool)."""
         with gzip.open(file_name, "r") as f_in:
             json_str = f_in.read().decode(self.default_encoding)
-        return [Candle.from_json(json_candle) for json_candle in json.loads(json_str)["data"]]
+        return [
+            Candle.from_json(json_candle)
+            for json_candle in json.loads(json_str)["data"]
+        ]
 
     async def list(self) -> List[str]:
         """List archive files asynchronously."""
-        return await asyncio.get_event_loop().run_in_executor(None, os.listdir, self.archive_folder)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, os.listdir, self.archive_folder
+        )
 
     async def get_file_names_filtered(
         self,
@@ -84,7 +88,9 @@ class ArchiveManager:
         file_names = await self.list()
 
         if exchange_code is not None:
-            file_names = [file for file in file_names if file.startswith(f"{exchange_code}_")]
+            file_names = [
+                file for file in file_names if file.startswith(f"{exchange_code}_")
+            ]
 
         if symbol is not None:
             file_names = [file for file in file_names if f"_{symbol}_" in file]
@@ -93,7 +99,9 @@ class ArchiveManager:
             file_names = [file for file in file_names if f"_{data_type}_" in file]
 
         if data_frame is not None:
-            file_names = [file for file in file_names if file.endswith(f"_{data_frame}.json.gz")]
+            file_names = [
+                file for file in file_names if file.endswith(f"_{data_frame}.json.gz")
+            ]
 
         return file_names
 
@@ -103,7 +111,9 @@ class ArchiveManager:
         if not os.path.exists(file_path):
             return []
 
-        return await asyncio.get_event_loop().run_in_executor(None, self.read_gzip_file, file_path)
+        return await asyncio.get_event_loop().run_in_executor(
+            None, self.read_gzip_file, file_path
+        )
 
     async def archive_candle(self, candle: Candle) -> None:
         """Archive a single candle."""

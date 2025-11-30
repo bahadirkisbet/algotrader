@@ -33,7 +33,6 @@ class IndicatorFactory:
     def create_indicator(
         cls,
         indicator_type: str,
-        symbol: str,
         indicator_manager: IndicatorManager,
         **kwargs: Any,
     ) -> Indicator:
@@ -58,11 +57,11 @@ class IndicatorFactory:
         if indicator_type_upper not in cls._indicator_registry:
             raise ValueError(
                 f"Unsupported indicator: {indicator_type}. "
-                f"Supported indicators: {list(cls._indicator_registry.keys())}"
+                f"Supported indicators: {list[str](cls._indicator_registry.keys())}"
             )
 
         indicator_class = cls._indicator_registry[indicator_type_upper]
-        indicator = indicator_class(symbol, indicator_manager, **kwargs)
+        indicator = indicator_class(indicator_manager, **kwargs)
 
         # Registration happens in indicator __init__, no need to register again
         return indicator
@@ -91,7 +90,9 @@ class IndicatorFactory:
         return indicator_type.upper() in cls._indicator_registry
 
     @classmethod
-    def register_indicator(cls, indicator_type: str, indicator_class: Type[Indicator]) -> None:
+    def register_indicator(
+        cls, indicator_type: str, indicator_class: Type[Indicator]
+    ) -> None:
         """
         Register a custom indicator class.
 

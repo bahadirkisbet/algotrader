@@ -11,7 +11,7 @@ import os
 from logging.handlers import RotatingFileHandler
 from typing import Optional
 
-from modules.config.config_manager import get_config
+from modules.config import config
 
 
 class LogManager:
@@ -29,25 +29,25 @@ class LogManager:
     @classmethod
     def setup_logger(cls) -> logging.Logger:
         """Setup logger."""
-        # Get global config
-        config = get_config()
-        
+
+        cfg = config.get("logging")
+
         # Determine logger level from the config
-        logging_level = cls.get_logging_level()
+        logging_level = cls.get_logging_level(cfg.get("log_level", "info"))
 
         # Create logger
         logger: logging.Logger = logging.getLogger(__name__)
         logger.setLevel(logging_level)
 
         # Ensure log directory exists
-        log_file = config.default.log_file
+        log_file = cfg.get("log_file", "log/app.log")
         log_dir = os.path.dirname(log_file)
         if log_dir and not os.path.exists(log_dir):
             os.makedirs(log_dir, exist_ok=True)
 
         # Create rotating file handler with proper configuration
-        max_bytes = config.default.max_log_size
-        backup_count = config.default.log_backup_count
+        max_bytes = int(cfg.get("max_log_size", 10 * 1024 * 1024))
+        backup_count = int(cfg.get("log_backup_count", 5))
 
         file_handler = RotatingFileHandler(
             log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
@@ -78,10 +78,9 @@ class LogManager:
         return logger
 
     @staticmethod
-    def get_logging_level() -> int:
+    def get_logging_level(log_level: str) -> int:
         """Get logging level from config."""
-        config = get_config()
-        log_level = config.default.log_level.upper()
+        log_level = log_level.upper()
 
         return getattr(logging, log_level)
 
@@ -93,7 +92,3 @@ class LogManager:
             for handler in cls._logger.handlers[:]:
                 cls._logger.removeHandler(handler)
             cls._logger = None
-
-
-# Backward compatibility alias
-AsyncLogManager = LogManager

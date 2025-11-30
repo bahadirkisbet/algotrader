@@ -6,23 +6,14 @@ to fetch historical data instead of maintaining state.
 """
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List, Optional
+from typing import List, Optional
 
-from modules.data.candle import Candle
+from modules.indicator.indicator_manager import IndicatorManager
 from modules.log import LogManager
-
-if TYPE_CHECKING:
-    from modules.indicators.indicator_manager import IndicatorManager
+from modules.model.candle import Candle
 
 
-class BaseIndicator(ABC):
-    """Abstract base class for all technical indicators."""
-
-    def __init__(self):
-        self.logger = LogManager.get_logger()
-
-
-class Indicator(BaseIndicator):
+class Indicator(ABC):
     """
     Base class for indicators that use IndicatorManager to fetch historical data.
 
@@ -30,7 +21,7 @@ class Indicator(BaseIndicator):
     avoiding internal state management.
     """
 
-    def __init__(self, symbol: str, indicator_manager: "IndicatorManager"):  # type: ignore
+    def __init__(self, symbol: str, indicator_manager: IndicatorManager):
         """
         Initialize indicator.
 
@@ -38,7 +29,7 @@ class Indicator(BaseIndicator):
             symbol: Trading pair symbol
             indicator_manager: IndicatorManager instance for data retrieval
         """
-        super().__init__()
+        self.logger = LogManager.get_logger()
         self.symbol = symbol
         self.indicator_manager = indicator_manager
         self.data: List[List[float]] = []  # [[timestamp, value], ...]

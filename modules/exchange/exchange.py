@@ -9,7 +9,7 @@ import asyncio
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 from models.data_models.candle import Candle
 from models.exchange_info import ExchangeInfo
@@ -38,6 +38,7 @@ class Exchange(ABC):
         self.logger: Optional[logging.Logger] = None
         self.is_initialized = False
         self.lock = asyncio.Lock()
+        self.on_candle_received: Optional[Callable[[Candle], None]] = None
 
         # Exchange configuration
         self.api_url: str = ""
@@ -45,13 +46,14 @@ class Exchange(ABC):
         self.first_data_date: Optional[datetime] = None
 
     @abstractmethod
-    async def initialize(self) -> None:
+    async def initialize(self, on_candle_received: Callable[[Candle], None]) -> None:
         """
         Initialize the exchange connection and setup.
 
         This method should be called before using any other exchange methods.
         It's responsible for setting up HTTP sessions, validating credentials, etc.
         """
+        pass
 
     @abstractmethod
     async def get_exchange_name(self) -> str:
@@ -175,11 +177,15 @@ class Exchange(ABC):
             self.is_initialized = False
 
             if self.logger:
-                self.logger.info("%s connection closed successfully", self.exchange_name)
+                self.logger.info(
+                    "%s connection closed successfully", self.exchange_name
+                )
 
         except Exception as e:
             if self.logger:
-                self.logger.error("Error closing %s connection: %s", self.exchange_name, e)
+                self.logger.error(
+                    "Error closing %s connection: %s", self.exchange_name, e
+                )
 
     async def set_initialized(self, value: bool) -> None:
         """

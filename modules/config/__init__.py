@@ -2,13 +2,8 @@
 Configuration module for system configuration, validation, and health monitoring.
 """
 
-from .config_manager import AppConfig, ConfigManager, get_config, reload_config
-from .config_validator import ConfigValidator
+from .config import config
 
 __all__ = [
-    "AppConfig",
-    "ConfigManager",
-    "ConfigValidator",
-    "get_config",
-    "reload_config",
+    "config",
 ]

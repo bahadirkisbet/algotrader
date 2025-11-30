@@ -1,0 +1,19 @@
+[MASTER]
+extension-pkg-allow-list=
+ignore=
+jobs=1
+
+[MESSAGES CONTROL]
+disable=
+    broad-except,
+    W0703,
+    W0718
+
+[REPORTS]
+output-format=text
+reports=no
+
+[BASIC]
+good-names=i,j,k,ex,Run,_
+
+

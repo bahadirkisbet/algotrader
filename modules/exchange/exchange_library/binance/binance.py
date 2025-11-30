@@ -10,16 +10,16 @@ import csv
 import io
 import zipfile
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import aiohttp
 
-from models.data_models.candle import Candle
-from models.exchange_info import ExchangeInfo
-from models.exchange_type import ExchangeType
-from models.sorting_option import SortBy, SortingOption
-from models.time_models import Interval
 from modules.exchange.exchange import Exchange
+from modules.model.candle import Candle
+from modules.model.exchange_info import ExchangeInfo
+from modules.model.exchange_type import ExchangeType
+from modules.model.interval import Interval
+from modules.model.sorting_option import SortBy, SortingOption
 
 
 class BinanceExchange(Exchange):
@@ -73,11 +73,11 @@ class BinanceExchange(Exchange):
         else:
             self.vision_data_path = "data/spot"
 
-    async def initialize(self) -> None:
+    async def initialize(self, on_candle_received: Callable[[Candle], None]) -> None:
         """Initialize the Binance exchange connection."""
         try:
             self.session = aiohttp.ClientSession()
-
+            self.on_candle_received = on_candle_received
             if await self.test_connection():
                 await self.set_initialized(True)
                 if self.logger:
@@ -90,7 +90,6 @@ class BinanceExchange(Exchange):
                 self.logger.error("Failed to initialize Binance exchange: %s", e)
             raise
 
-    async def get_exchange_name(self) -> str:
         """Get the name of the exchange."""
         return self.exchange_name
 
@@ -473,14 +472,14 @@ class BinanceExchange(Exchange):
         for row in csv_reader:
             try:
                 candle = Candle(
-                    symbol=symbol,
-                    timestamp=int(row[0]),
-                    open=float(row[1]),
-                    high=float(row[2]),
-                    low=float(row[3]),
-                    close=float(row[4]),
-                    volume=float(row[5]),
-                    trade_count=int(row[8]) if len(row) > 8 else 0,
+                    s=symbol,
+                    ts=int(row[0]),
+                    o=float(row[1]),
+                    h=float(row[2]),
+                    l=float(row[3]),
+                    c=float(row[4]),
+                    v=float(row[5]),
+                    tc=int(row[8]) if len(row) > 8 else 0,
                 )
                 candles.append(candle)
             except (ValueError, IndexError) as e:
@@ -542,14 +541,14 @@ class BinanceExchange(Exchange):
 
                 for item in data:
                     candle = Candle(
-                        symbol=symbol,
-                        timestamp=int(item[0]),
-                        open=float(item[1]),
-                        high=float(item[2]),
-                        low=float(item[3]),
-                        close=float(item[4]),
-                        volume=float(item[5]),
-                        trade_count=int(item[8]) if len(item) > 8 else 0,
+                        s=symbol,
+                        ts=int(item[0]),
+                        o=float(item[1]),
+                        h=float(item[2]),
+                        l=float(item[3]),
+                        c=float(item[4]),
+                        v=float(item[5]),
+                        tc=int(item[8]) if len(item) > 8 else 0,
                     )
                     candles.append(candle)
 

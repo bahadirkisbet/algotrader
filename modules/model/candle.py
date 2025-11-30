@@ -10,14 +10,14 @@ class Candle:
 
     def __init__(
         self,
-        symbol: str,
-        timestamp: int,
-        open: float,
-        high: float,
-        low: float,
-        close: float,
-        volume: float,
-        trade_count: Optional[int] = None,
+        s: str,
+        ts: int,
+        o: float,
+        h: float,
+        l: float,
+        c: float,
+        v: float,
+        tc: Optional[int] = None,
     ):
         """
         Initialize a new Candle instance with validation.
@@ -32,59 +32,64 @@ class Candle:
             volume: Trading volume
             trade_count: Number of trades during the period
         """
-        self._validate_inputs(symbol, timestamp, open, high, low, close, volume, trade_count)
+        self._validate_inputs(s, ts, o, h, l, c, v, tc)
 
-        self.symbol = symbol
-        self.timestamp = timestamp
-        self.open = float(open)
-        self.high = float(high)
-        self.low = float(low)
-        self.close = float(close)
-        self.volume = float(volume)
-        self.trade_count = int(trade_count) if trade_count is not None else None
+        self.s = s
+        self.ts = ts
+        self.o = o
+        self.h = h
+        self.l = l
+        self.c = c
+        self.v = v
+        self.tc = tc
+        self.iv = {}
 
     def _validate_inputs(
         self,
-        symbol: str,
-        timestamp: int,
-        open: float,
-        high: float,
-        low: float,
-        close: float,
-        volume: float,
-        trade_count: int,
+        s: str,
+        ts: int,
+        o: float,
+        h: float,
+        l: float,
+        c: float,
+        v: float,
+        tc: int,
     ) -> None:
         """Validate input parameters for data integrity."""
-        if not symbol or not isinstance(symbol, str):
+        if not s or not isinstance(s, str):
             raise ValueError("Symbol must be a non-empty string")
 
-        if not isinstance(timestamp, (int, float)) or timestamp <= 0:
+        if not isinstance(ts, (int, float)) or ts <= 0:
             raise ValueError("Timestamp must be a positive number")
 
         if not isinstance(open, (int, float)) or open < 0:
             raise ValueError("Open price must be a non-negative number")
 
-        if not isinstance(high, (int, float)) or high < 0:
+        if not isinstance(h, (int, float)) or h < 0:
             raise ValueError("High price must be a non-negative number")
 
-        if not isinstance(low, (int, float)) or low < 0:
+        if not isinstance(l, (int, float)) or l < 0:
             raise ValueError("Low price must be a non-negative number")
 
-        if not isinstance(close, (int, float)) or close < 0:
+        if not isinstance(c, (int, float)) or c < 0:
             raise ValueError("Close price must be a non-negative number")
 
-        if not isinstance(volume, (int, float)) or volume < 0:
+        if not isinstance(v, (int, float)) or v < 0:
             raise ValueError("Volume must be a non-negative number")
 
-        if not isinstance(trade_count, (int, float)) or trade_count < 0:
+        if not isinstance(tc, (int, float)) or tc < 0:
             raise ValueError("Trade count must be a non-negative number")
 
         # Validate price relationships
-        if high < max(open, close):
-            raise ValueError("High price must be greater than or equal to open and close prices")
+        if h < max(o, c):
+            raise ValueError(
+                "High price must be greater than or equal to open and close prices"
+            )
 
-        if low > min(open, close):
-            raise ValueError("Low price must be less than or equal to open and close prices")
+        if l > min(o, c):
+            raise ValueError(
+                "Low price must be less than or equal to open and close prices"
+            )
 
     @classmethod
     def from_json(cls, json_data: Dict[str, Any]) -> "Candle":
@@ -118,14 +123,14 @@ class Candle:
 
         try:
             return cls(
-                symbol=str(json_data["symbol"]),
-                timestamp=int(json_data["timestamp"]),
-                open=float(json_data["open"]),
-                high=float(json_data["high"]),
-                low=float(json_data["low"]),
-                close=float(json_data["close"]),
-                volume=float(json_data["volume"]),
-                trade_count=int(json_data["trade_count"]),
+                s=str(json_data["s"]),
+                ts=int(json_data["ts"]),
+                o=float(json_data["o"]),
+                h=float(json_data["h"]),
+                l=float(json_data["l"]),
+                c=float(json_data["c"]),
+                v=float(json_data["v"]),
+                tc=int(json_data["tc"]),
             )
         except (ValueError, TypeError) as e:
             raise ValueError(f"Invalid data type in JSON: {e}")
@@ -138,14 +143,15 @@ class Candle:
     def to_dict(self) -> Dict[str, Any]:
         """Convert candle to dictionary representation."""
         return {
-            "symbol": self.symbol,
-            "timestamp": self.timestamp,
-            "open": self.open,
-            "high": self.high,
-            "low": self.low,
-            "close": self.close,
-            "volume": self.volume,
-            "trade_count": self.trade_count,
+            "s": self.s,
+            "ts": self.ts,
+            "o": self.o,
+            "h": self.h,
+            "l": self.l,
+            "c": self.c,
+            "v": self.v,
+            "tc": self.tc,
+            "iv": self.iv,
         }
 
     def get_json(self) -> Dict[str, Any]:
@@ -159,67 +165,67 @@ class Candle:
     @property
     def open_price(self) -> float:
         """Get the opening price."""
-        return self.open
+        return self.o
 
     @property
     def high_price(self) -> float:
         """Get the highest price during the period."""
-        return self.high
+        return self.h
 
     @property
     def low_price(self) -> float:
         """Get the lowest price during the period."""
-        return self.low
+        return self.l
 
     @property
     def close_price(self) -> float:
         """Get the closing price."""
-        return self.close
+        return self.c
 
     @property
     def datetime(self) -> datetime:
         """Get the datetime representation of the timestamp."""
-        return datetime.fromtimestamp(self.timestamp / 1000)
+        return datetime.fromtimestamp(self.ts / 1000)
 
     @property
     def price_change(self) -> float:
         """Get the absolute price change from open to close."""
-        return self.close - self.open
+        return self.c - self.o
 
     @property
     def price_change_percent(self) -> float:
         """Get the percentage price change from open to close."""
-        if self.open == 0:
+        if self.o == 0:
             return 0.0
-        return ((self.close - self.open) / self.open) * 100
+        return ((self.c - self.o) / self.o) * 100
 
     @property
     def body_size(self) -> float:
         """Get the size of the candle body (open to close)."""
-        return abs(self.close - self.open)
+        return abs(self.c - self.o)
 
     @property
     def upper_shadow(self) -> float:
         """Get the size of the upper shadow (high to max of open/close)."""
-        return self.high - max(self.open, self.close)
+        return self.h - max(self.o, self.c)
 
     @property
     def lower_shadow(self) -> float:
         """Get the size of the lower shadow (min of open/close to low)."""
-        return min(self.open, self.close) - self.low
+        return min(self.o, self.c) - self.l
 
     @property
     def total_range(self) -> float:
         """Get the total price range (high to low)."""
-        return self.high - self.low
+        return self.h - self.l
 
     def is_bullish(self) -> bool:
         """Check if the candle is bullish (close > open)."""
-        return self.close > self.open
+        return self.c > self.o
 
     def is_bearish(self) -> bool:
         """Check if the candle is bearish (close < open)."""
-        return self.close < self.open
+        return self.c < self.o
 
     def is_doji(self, threshold: float = 0.001) -> bool:
         """Check if the candle is a doji (very small body)."""
@@ -228,17 +234,17 @@ class Candle:
     def __str__(self) -> str:
         """String representation of the candle."""
         return (
-            f"{self.symbol} - {self.datetime.strftime('%Y-%m-%d %H:%M:%S')} - "
-            f"O:{self.open:.4f} H:{self.high:.4f} L:{self.low:.4f} "
-            f"C:{self.close:.4f} V:{self.volume:.2f} T:{self.trade_count}"
+            f"{self.s} - {self.datetime.strftime('%Y-%m-%d %H:%M:%S')} - "
+            f"O:{self.o:.4f} H:{self.h:.4f} L:{self.l:.4f} "
+            f"C:{self.c:.4f} V:{self.v:.2f} T:{self.tc}"
         )
 
     def __repr__(self) -> str:
         """Detailed string representation for debugging."""
         return (
-            f"Candle(symbol='{self.symbol}', timestamp={self.timestamp}, "
-            f"open={self.open}, high={self.high}, low={self.low}, "
-            f"close={self.close}, volume={self.volume}, trade_count={self.trade_count})"
+            f"Candle(symbol='{self.s}', timestamp={self.ts}, "
+            f"o={self.o}, h={self.h}, l={self.l}, "
+            f"c={self.c}, v={self.v}, tc={self.tc})"
         )
 
     def __eq__(self, other: Any) -> bool:
@@ -246,21 +252,21 @@ class Candle:
         if not isinstance(other, Candle):
             return False
         return (
-            self.symbol == other.symbol
-            and self.timestamp == other.timestamp
-            and self.open == other.open
-            and self.high == other.high
-            and self.low == other.low
-            and self.close == other.close
-            and self.volume == other.volume
-            and self.trade_count == other.trade_count
+            self.s == other.s
+            and self.ts == other.ts
+            and self.o == other.o
+            and self.h == other.h
+            and self.l == other.l
+            and self.c == other.c
+            and self.v == other.v
+            and self.tc == other.tc
         )
 
     def __hash__(self) -> int:
         """Hash based on symbol and timestamp."""
-        return hash((self.symbol, self.timestamp))
+        return hash((self.s, self.ts))
 
     @staticmethod
     def get_fields() -> list:
         """Get list of field names."""
-        return ["symbol", "timestamp", "open", "high", "low", "close", "volume", "trade_count"]
+        return ["s", "ts", "o", "h", "l", "c", "v", "tc", "iv"]

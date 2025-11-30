@@ -5,14 +5,14 @@ from typing import Any, Callable, Dict, List, Optional
 
 import websockets
 
-from utils.dependency_injection_container import get
+from modules.log import LogManager
 
 
 class WebSocketManager:
     """WebSocket manager for handling real-time data connections."""
 
     def __init__(self):
-        self.logger: logging.Logger = get(logging.Logger)
+        self.logger: logging.Logger = LogManager.get_logger()
         self.websocket: Optional = None
         self.is_connected = False
         self.reconnect_attempts = 0
